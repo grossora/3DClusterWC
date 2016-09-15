@@ -75,19 +75,27 @@ def crawler(inup, dist, mincluster ):
 
 	# Now crawthough all the rest of the points
 	boo = True    ### Is this needed? 
+	checklast = [x for x in tmpmerge]
 	while boo: # This is going to take long... but it's like a clean up
 	    tmp_copy = len(tmpmerge)	
+	    tcl = []
 	    for testpt in unusedlist:
 	        # Check distances  
 	        # here we are going to check all the list of points in the tmp until we either end of find a close point
-	        for other in tmpmerge: 
+	        for other in checklast: 
+	        #for other in tmpmerge: 
 	            distsqrd = pow(inup[other][0]-inup[testpt][0],2) + pow(inup[other][1]-inup[testpt][1],2) + pow(inup[other][2]-inup[testpt][2],2) 
 	            if distsqrd<mindist:
 	 	        #Merge them into the current cluster 
 		        #The index in index list becomes whatever the cluster counter is
 		        tmpmerge.append(testpt)
+		        tcl.append(testpt)
+			break
 		        #now get out and move to next point to consider
-		        break
+		# Reset the checklast from tcl 
+	    checklast = [ x for x in tcl]
+
+
 	    if len(tmpmerge)>mincluster:# this is not the best way to do this but for now its ok 
 	    # if we make it to pass the if that means we are going to make cluster
 	    # so it does not matter if we clean up the unusedlist here 
@@ -116,9 +124,9 @@ def crawler(inup, dist, mincluster ):
 	    # We already did this
 	# we need a catch to put back the tmpperge points into unused if we do not pass the min cluster
 ##########
-	if len(tmpmerge)<mincluster:
-	    for b in tmpmerge:
-		unusedlist.append(b)
+#	if len(tmpmerge)<mincluster:
+#	    for b in tmpmerge:
+#		unusedlist.append(b)
 ##########   
 	
     return indexlist

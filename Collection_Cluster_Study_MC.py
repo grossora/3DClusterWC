@@ -6,9 +6,11 @@ from scipy.stats import norm
 from scipy import stats
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
-import datahandle as dh
-import protocluster as pc
+import Utils.datahandle as dh
+import Clustering.protocluster as pc
 import collections as col 
+import SParams.axisfit as axfi
+import math as math
 
 #Cheating on a few graphical things
 from pylab import MaxNLocator
@@ -24,8 +26,17 @@ energylist = []
 nclist = []
 selrecolist = []
 
+recodir = [] # we don't need this..
+mcdir = []# we don't need this..
+angledif = []
+
+
 mincluster = 10
-maxdatasetsize = 10000
+maxdatasetsize = 8000
+
+dist_cl = 8. 
+min_cl =  10
+
 ###############
 ###############
 
@@ -59,13 +70,14 @@ for f in sys.argv[1:]:
 ####
     if len(dataset)>maxdatasetsize:
 	continue
-    labels = pc.crawler(dataset,8.,10)
+    labels = pc.crawler(dataset,dist_cl, min_cl)
+    #labels = pc.crawler(dataset,8.,10)
 ####
 ####
 ####
     countedlist = col.Counter(labels)
+    #Here is the largest cluster label.... not index
     largest_cluster_label =  countedlist.most_common(1)[0][0] 
-    
 
     selectedcharge = 0.0
     for pt in dh.DuplicateIDX(labels,largest_cluster_label):
@@ -74,7 +86,6 @@ for f in sys.argv[1:]:
 	#FitData  =dataset[pt][3] - 0.472670977155*dataset[pt][3]+  105245.981838
 	selectedcharge +=FitData 
 	
-
     #add the total selected charge to the list
     sellist.append(selectedcharge)
     selrecolist.append(selectedcharge/tot_r_charge)
@@ -88,8 +99,10 @@ for f in sys.argv[1:]:
 # If we make it here fill out all the info!
     #get the energy of the particle 
     for m in mc:
-        startmom = pow( pow(m.mc_startMomentum[0],2),0.5)# Not sure if this is correct
+        startmom = pow( pow(m.mc_startMomentum[0],2)+pow(m.mc_startMomentum[1],2)+pow(m.mc_startMomentum[2],2),0.5)# Not sure if this is correct
         energylist.append(startmom)
+	print 'mc position ' 
+	mcdir = [m.mc_endXYZT[0] -m.mc_startXYZT[0],m.mc_endXYZT[1] -m.mc_startXYZT[1],m.mc_endXYZT[2] -m.mc_startXYZT[2]]
 
     tlist.append(tot_mc_charge)
     rlist.append(tot_r_charge)
@@ -102,7 +115,38 @@ for f in sys.argv[1:]:
    
 #################### 
 
+    # here are the index position that are duplicate with the label number of clustering
+#### LOOK AT PCA 
+    recodir = axfi.firstfit(dataset,dh.DuplicateIDX(labels,largest_cluster_label))
+    
+    print 'mcdir' , mcdir
+    print 'recodir' , recodir
+    # angle diff between mc and reco
+    # This is the dot prodi 
+    recodotmc = sum(p*q for p,q in zip(mcdir,recodir))
+    # This is super shitty.... 
+    costheta = recodotmc/( np.sqrt(mcdir[0]*mcdir[0]+mcdir[1]*mcdir[1]+mcdir[2]*mcdir[2]) * np.sqrt(recodir[0]*recodir[0]+recodir[1]*recodir[1]+recodir[2]*recodir[2]))
+    anglediff =  math.acos(costheta) * 180./3.14159265
 
+    if anglediff>90.:
+	anglediff = 180 - anglediff
+	
+    print 'anglediff' , anglediff #180 since we are going the other way 
+    angledif.append(anglediff)
+    
+    
+
+
+
+####### Add the mean and the param info into a text file ########
+# Find the line that had the evt and then read off the rest of the params 
+lookup = open('CL_Param_Opt_Photon.txt','a')
+print 'this is the mean.. ', np.mean(selrecolist)
+
+line = str(dist_cl) +' ' +str(min_cl)+' ' + str(np.mean(selrecolist)) +'\n'
+lookup.writelines(line)
+
+############################
 
 ############ MC For the entire set from truth to reco... no clustering ###########
 #Fit the ofset in charge 
@@ -110,7 +154,7 @@ for f in sys.argv[1:]:
 slope, intercept, r_value, p_value, std_err = stats.linregress(rlist,dlist)
 # Refit the reco 
 rfitlist= [ x + slope*x+intercept for x in rlist]
-print slope,'  intercept ',intercept
+#print slope,'  intercept ',intercept
 
 # Calcuate the difference between the fit reco and truth 
 dfitlist =[]
@@ -122,6 +166,15 @@ for s in range(0,len(rfitlist)):
     dfitlist.append((tlist[s] - rfitlist[s])/tlist[s])
     tfitlist.append(tlist[s])
     energyfitlist.append(energylist[s])
+
+############
+#quick fit
+############
+eslope, eintercept, er_value, ep_value, estd_err = stats.linregress(rlist,energylist)
+# Refit the reco 
+#rfitlist= [ x + slope*x+intercept for x in rlist]
+print 'ENERGY FIT', eslope,'  intercept ',eintercept
+
 
 ###############################
 ### Reco list v True List #####
@@ -254,6 +307,21 @@ ax6.set_ylabel('Total Reco Charge')
 ax6.set_ylim([0.,1.1])
 ax6.set_xlim([0.,int(max(rlist))+10000000.])
 fig6.savefig('Frac_clustered.png')
+plt.show()
+
+
+##################################
+### angle dif v recocharge #######
+##################################
+fig9 = plt.figure()
+ax9 = fig9.add_subplot(111)
+ax9.hist(angledif, [x for x in range(20)], facecolor='blue', alpha=0.75)
+ax9.grid(True)
+ax9.set_title('angle diff')
+ax9.set_xlabel('angle diference in degree ')
+ax9.set_ylabel('entries')
+#xa = ax8.get_xaxis()
+#xa.set_major_locator(MaxNLocator(integer=True))
 plt.show()
 
 
