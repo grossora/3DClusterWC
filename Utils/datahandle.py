@@ -5,11 +5,13 @@ import ROOT
 #Need to define detector volumes
 
 def Unique(infile): 
+    #returns all unique
     b = np.ascontiguousarray(infile).view(np.dtype((np.void, infile.dtype.itemsize * infile.shape[1])))
     _, idx = np.unique(b, return_index=True)
     return infile[idx]
 
 def DuplicateIDX(lst,value):
+    #returns a list of duplicated 
     return [i for i, x in enumerate(lst) if x == value]
 
 def ConvertWC(infile):
