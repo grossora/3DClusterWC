@@ -1,6 +1,7 @@
 import numpy as np
 import axisfit as af
 import math as math
+from operator import itemgetter
 
 def findvtx(shrA,shrB):
     # Get the first Shower 
@@ -21,6 +22,60 @@ def findvtx(shrA,shrB):
     midway = (shrA[0]+sc*shrA[1] - (shrB[0]+tc*shrB[1]))/2
     vtx = shrA[0]+sc*shrA[1] - midway
     return vtx
+
+def findRoughShowerStart(inup,shr_inup,vtx):
+    #shr_inup is the shower points 
+    #vtx is the vertex you want to reference too 
+    
+    #Find the set of n_ru clostest points to the vertex
+    dset = [] 
+    for ru in shr_inup:
+        dist = pow(vtx[0]-inup[ru][0],2) +pow(vtx[1]-inup[ru][1],2) +pow(vtx[2]-inup[ru][2],2)
+	s = (ru,dist, inup[ru][0], inup[ru][1], inup[ru][2])
+	dset.append(s)
+    dsort = sorted(dset,key = itemgetter(1))
+    # now dsort is a sorted list of sets... sorted by sitance 
+    ### How big does this need to be? hmmm maybe something like 50 points? 
+	# For now just average...
+	# Later we can be a little more fancy with outliers 
+        # i.e. Then loop over n_ru with a simple point cluster to remove outliers 
+    # Hard coded number for shower start point
+    max_test = 50
+    if len(dsort)<max_test:
+	max_test = len(dsort)
+    npav = np.asarray(dsort[0:max_test])
+    xpos = npav.mean(0)[2]
+    ypos = npav.mean(0)[3]
+    zpos = npav.mean(0)[4]
+    shsp = [xpos,ypos,zpos]
+    return shsp
+
+def findconversionlength(vtx,startpt):
+    v = np.asarray(vtx)
+    s = np.asarray(startpt)
+    d = v-s
+    dist = np.sqrt(d[0]*d[0]+d[1]*d[1]+d[2]*d[2])
+    return dist
+
+def findIP(shrA,shrB):
+    # Get the first Shower 
+    shrA_dir = shrA[1]
+    shrB_dir = shrB[1]
+
+    a = np.dot(shrA[1],shrA[1])
+    b = np.dot(shrA[1],shrB[1])
+    c = np.dot(shrB[1],shrB[1])
+    d = np.dot(shrA[1],(shrA[0]-shrB[0]))
+    e = np.dot(shrB[1],(shrA[0]-shrB[0]))
+    # Check if non paralle
+    den = a*c-b*b
+    if den<0.0000001:
+	print 'lines are too close'
+    sc = (b*e-c*d)/(den)
+    tc = (a*e-b*d)/(den)
+    ptd  = (shrA[0]+sc*shrA[1] - (shrB[0]+tc*shrB[1]))
+    dist = np.sqrt(ptd[0]*ptd[0]+ptd[1]*ptd[1]+ptd[2]*ptd[2])
+    return dist
 
 
 def openingangle(shrA, shrB, vtx):
@@ -48,7 +103,7 @@ def openingangle(shrA, shrB, vtx):
     cos = np.dot(shrA_dir,shrB_dir) /( sma*smb  )
     #print 'this is cos ', str(cos)
     angle = math.acos(cos)
-    print 'this is angle ', str(angle)
+    #print 'this is angle ', str(angle)
     return angle
     
 def totcharge(inup, indexset):
@@ -56,8 +111,8 @@ def totcharge(inup, indexset):
     for s in indexset:
 	totq+= inup[s][3]
     # Shitty fit for energy 
+    ############# NEEDS TO BE FIxED
     fenergy = 2.5847*pow(10,-8) *totq +0.017209
-    #fenergy = 2.473*pow(10,-8) *totq +0.030966546
     return fenergy
     
 
@@ -65,6 +120,8 @@ def mass(ea,eb,angle):
     # make sure things are ok 
     if ea<=0 or eb <=0 :
         print ' energy is zero!!!'
+	zm = 0
+	return zm
     mass = np.sqrt(2.* ea*eb*(1-math.cos(angle)))
     return mass
     
