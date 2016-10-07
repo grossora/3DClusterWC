@@ -14,6 +14,13 @@ def DuplicateIDX(lst,value):
     #returns a list of duplicated 
     return [i for i, x in enumerate(lst) if x == value]
 
+def FileIsGood(infile):
+    fi = ROOT.TFile('{}'.format(infile))
+    rt = fi.Get("T_rec")
+    if rt.GetEntries()==0:
+	return False
+    return True
+
 def ConvertWC(infile):
     #Bring in the file 
     f = ROOT.TFile("{}".format(infile))
