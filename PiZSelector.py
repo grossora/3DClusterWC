@@ -1,115 +1,143 @@
 import sys, os
+import math as math
 import numpy as np
 import Utils.datahandle as dh
-import ROOT 
+import Utils.mchandle as mh
+import ROOT
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
 from scipy.stats import norm
 from scipy import stats
+import Clustering.protocluster as pc
+import collections as col
+import SParams.axisfit as axfi 
+import SParams.selpizero as selpz
+import SParams.merger as mr
 
 
-# List for the reco mass 
 rmass_v = []
-maxdatasetsize = 10000
-proc = 0 
+maxdatasetsize = 20000
+proc = 0
+
+#### THese cuts don't matter here
+#minanlge = 0.3
+#Emin = .001
+#maxIP = 10
+lookup = open('PiZero_Selection_Params.txt','a+')
+
+totproc = 0 
 
 for f in sys.argv[1:]:
+    ##########
+    #### Build in a check to see if we did this already
+    ##########
+
+    dirnum = f.rsplit('/',1)[0].rsplit('/',1)[1]
+    fnum = f.rsplit('/',1)[1].rsplit('.')[0].rsplit('_',1)[1]
+    alreadydone = False
+    for line in  lookup:
+	sline = line.split(' ',2)
+	print ' alrady have these '  
+	print sline[0]
+	print sline[1]
+	if sline[0]==dirnum and sline[1]==fnum:
+	    alreadydone = True
+	    break
+    if alreadydone:
+	continue
+
     fi = ROOT.TFile("{}".format(f))
+    rt= fi.Get("T_rec")
+    if rt.GetEntries()==0:
+        print 'AHHHH Got nothing...'
+        ##################################    FILLLLLLLLLLLLL
+	fline =[ -2 for x in range(41)]
+	rfline = dirnum+' '+fnum+' '+ str(fline).split('[')[1].rsplit(']')[0].replace(',','')+ '\n'
+	lookup.writelines(rfline)
 
-#Bring in data 
-    predataset = dh.ConvertWC_InTPC('{}'.format(f))
-    print 'predataset size ', len(predataset)
-    dataset = dh.Unique(predataset)
-    print 'dataset size ', len(dataset)
-
-    if len(dataset)>maxdatasetsize:
+	 
         continue
-    proc +=1
+    TruthString = mh.piz_mc_info('{}'.format(f))
+    ### TEMP
+    print dirnum
+    print fnum
+    print TruthString
+    predataset = dh.ConvertWC_InTPC('{}'.format(f))
+    print 'predataset_size ' , len(predataset)
+    dataset = dh.Unique(predataset)
+    print 'dataset_ Unique', len(dataset)
+    if len(dataset)>maxdatasetsize: 
+        ##################################    FILLLLLLLLLLLLL
+	fline =[ -3 for x in range(41)]
+	rfline = dirnum+' '+fnum+' '+ str(fline).split('[')[1].rsplit(']')[0].replace(',','')+ '\n'
+	lookup.writelines(rfline)
+	continue
+    totproc +=1
+    print 'Current Event -->  Dir: ', str(dirnum) +'  File number ' + str(fnum)
+   # proc +=1
+    labels = pc.crawler(dataset,9,10)
+    #labels = pc.crawler(dataset,8.,10)
+    datasetidx_holder = mr.label_to_idxholder(labels,150)
+    nlabels = mr.PCA_merge(dataset,labels,datasetidx_holder,0.35)
+    labels = nlabels
+    datasetidx_holder = mr.label_to_idxholder(labels,150)
 
 
-
-# Add some clustering algos
-    import Clustering.protocluster as pc
-    labels = pc.crawler(dataset,8.,10)
-
-#Shit hack for now
-# Add this into the utilities 
-    import collections as col
-    shi = col.Counter(labels)
-# Shi is a set, and dic lookup 
-    print shi.items()
-    cval = [x[0] for x in shi.items() if x[1]>200]
-    print cval
-# cval are cadidate shower/cluster id ... find out what there index is in dataset
-#  find out what there index is in dataset below 
-    datasetidx_holder = []
-    for s in cval:
-        datasetidx_v = []
-        [datasetidx_v.append(i) for i, j in enumerate(labels) if j == s]
-        datasetidx_holder.append(datasetidx_v)
-
-#datasetidx_holder contains lists of index values for cluster in the dataset
-# Run over them as pairs 
-#################
-    import SParams.axisfit as axfi
-    import SParams.selpizero as selpz
-
-    if len(datasetidx_holder)<2: 
-        print'seg fault'
-
-    FIA = 0  
-    FIB = 0    
-    shrpair_v = []
- 
-    for a in xrange(len(datasetidx_holder)):
-        shrA = axfi.showerfit(dataset,datasetidx_holder[a])
-        EA =  selpz.totcharge(dataset,datasetidx_holder[a]) 
-        for b in xrange(a+1,len(datasetidx_holder)):
-            shrB = axfi.showerfit(dataset,datasetidx_holder[b])
-            EB =  selpz.totcharge(dataset,datasetidx_holder[b]) 
-        #print 'position :' , str(a),str(b)
-	#### Will do work in here 
-	    vertex = selpz.findvtx(shrA,shrB)
-            angle = selpz.openingangle(shrA,shrB,vertex)
-
-	# Get prodocuts to return index 
+    
 	
-	# If dataset holder ==2 just make the mass
-	    recomass = selpz.mass(EA,EB,angle)
+    if len(datasetidx_holder)<2:
+	print 'segfault' 
+        ##################################    FILLLLLLLLLLLLL
+	fline =[ -4 for x in range(41)]
+	rfline = dirnum+' '+fnum+' '+ str(fline).split('[')[1].rsplit(']')[0].replace(',','') + '\n'
+	lookup.writelines(rfline)
+	continue
+    shrpair_v = []
+
+    #Implement a shower merging
+
+    for a in xrange(len(datasetidx_holder)):
+	shrA = axfi.weightshowerfit(dataset,datasetidx_holder[a])
+	#shrA = axfi.showerfit(dataset,datasetidx_holder[a])
+	EA = selpz.totcharge(dataset,datasetidx_holder[a])
+	for b in xrange(a+1,len(datasetidx_holder)):
+	    shrB = axfi.weightshowerfit(dataset,datasetidx_holder[b])
+	    #shrB = axfi.showerfit(dataset,datasetidx_holder[b])
+	    EB = selpz.totcharge(dataset,datasetidx_holder[b])
+	    vertex = selpz.findvtx(shrA,shrB)
+	    IP = selpz.findIP(shrA,shrB)
+	    print 'VERTEX ', str(vertex)
+	    SP_a = selpz.findRoughShowerStart(dataset,datasetidx_holder[a],vertex)
+	    print 'SP A : ', str(SP_a)
+	    radL_a = selpz.findconversionlength(vertex,SP_a)
+	    SP_b = selpz.findRoughShowerStart(dataset,datasetidx_holder[b],vertex)
+	    print 'SP B : ', str(SP_b)
+	    radL_b = selpz.findconversionlength(vertex,SP_b)
+	    print 'radL B', str(radL_b)
 	    
-	#############################
-	###cut on opening anlge####
-	#############################
-	    if angle < 0.1:
-	        continue
-            #if EA+EB<.070:
-	#	continue
-            print' this is a given reco mass' , str(recomass*1000)
+	    angle = selpz.openingangle(shrA,shrB,vertex)	
+	    recomass = selpz.mass(EA,EB,angle)
+	    # Place all cuts
+	    #if angle< 0.1:
+	    #	continue
+		
+	    print 'IP', IP 
+	    print 'recomass', recomass*1000.#Putting things in MEV
+	    
 	    pair = (a,b,recomass)
 	    shrpair_v.append(pair)
-	
-#############################
-#############################
-# Fill out the mass histogram
-#############################
-#############################
+	    
+	    #Format : 
+	    #old # Proc , mass , ShrA , ShrB, Elarge, Esmall, Angle, IP,radL_A , radL_B, vtx_x , vtx_y, vtx_z
+	    RecoString =' ' +str(recomass*1000)+' '+ str(vertex[0])+ ' '+ str(vertex[1])+ ' '+ str(vertex[2])+' '+ str(EA*1000.)+ ' '+ str(SP_a[0])+ ' '+ str(SP_a[1])+ ' '+ str(SP_a[2])+ ' '+ str(EB*1000.)+ ' '+ str(SP_b[0])+ ' '+ str(SP_b[1])+ ' '+ str(SP_b[2])+ ' '+str(angle)+' '+str(1-math.cos(angle))+ ' '+ str(IP)+ ' '+ str(radL_a)+ ' '+ str(radL_b)
 
-    if len(shrpair_v)>=1:
-        rmass_v.append(shrpair_v[0][2]*1000.)
+	    line = str(dirnum)+ ' ' + str(fnum)+' '+TruthString+RecoString+'\n'
+	    #line linegth is 41
+	    lookup.writelines(line)
+	    #lookup.writelines(line)
 
-
-
-print 'Summary: ' , proc, ' out of ', len(sys.argv[1:]),' total files were processed '    
-    
-fig3 = plt.figure()
-n, bins, patches = plt.hist(rmass_v, 35, facecolor='blue', alpha=0.75)
-(mu, sigma) = norm.fit(rmass_v)
-y = mlab.normpdf( bins, mu, sigma)
-l = plt.plot(bins, y, 'r--', linewidth=1)
-nent = len(rmass_v)
-plt.title(r'$\mathrm{(True-Reco) / True:}\ \mu=%.3f,\ \sigma=%.3f,\ \mathrm{entries:}\ %.3f,\ \mathrm{ out of:}\ %.3f $' %(mu, sigma,nent,proc))
-plt.show()
+lookup.close()
+#print 'Summary: ' , proc, ' out of ', len(sys.argv[1:]), ' total files proccessed'
 
 
-
-
+print' Total Processed ', str(totproc)
