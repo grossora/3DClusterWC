@@ -59,3 +59,31 @@ def piz_mc_info(infile):
 	ret = str(dalitz)+' '+str(vtx_pi_x)+' '+str(vtx_pi_y)+' '+str(vtx_pi_z)+' '+str(p_pi_x)+' '+str(p_pi_y)+' '+str(p_pi_z)+' '+str(p_pi_mag)+' '+str(vtx_gamma_x)+' '+str(vtx_gamma_y)+' '+str(vtx_gamma_z)+' '+str(p_gamma_x)+' '+str(p_gamma_y)+' '+str(p_gamma_z)+' '+str(p_gamma_mag)+' '+str(vtx_gamma_2_x)+' '+str(vtx_gamma_2_y)+' '+str(vtx_gamma_2_z)+' '+str(p_gamma_2_x)+' '+str(p_gamma_2_y)+' '+str(p_gamma_2_z)+' '+str(p_gamma_2_mag)+' '+str(gamma_angle) + ' '+ str(1-math.cos(gamma_angle))
 	
 	return ret 
+
+
+def gamma_mc_info(infile):
+    #Returns a large string of of MC truth info which is specific and useful for pi0s
+    f = ROOT.TFile("{}".format(infile))
+    t = f.Get("TMC")
+    # the photon should be the first
+    for en in t:
+        vtx_gamma_x = en.mc_endXYZT[0]
+        vtx_gamma_y = en.mc_endXYZT[1]
+        vtx_gamma_z = en.mc_endXYZT[2]
+        p_gamma_x = en.mc_startMomentum[0]/en.mc_startMomentum[3]
+        p_gamma_y = en.mc_startMomentum[1]/en.mc_startMomentum[3]
+        p_gamma_z = en.mc_startMomentum[2]/en.mc_startMomentum[3]
+        p_gamma_mag = en.mc_startMomentum[3]
+        ret = str(vtx_gamma_x)+' '+str(vtx_gamma_y)+' '+str(vtx_gamma_z)+' '+str(p_gamma_x)+' '+str(p_gamma_y)+' '+str(p_gamma_z)+' '+str(p_gamma_mag)
+        return ret
+
+def gamma_mc_dep(infile):
+    #Returns a large string of of MC truth info which is specific and useful for pi0s
+    f = ROOT.TFile("{}".format(infile))
+    t = f.Get("T_true")
+    # the photon should be the first
+    qdep = 0.0
+    for en in t:
+        qdep +=en.q
+    ret = str(qdep)
+    return ret
