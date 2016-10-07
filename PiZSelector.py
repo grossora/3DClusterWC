@@ -23,7 +23,7 @@ proc = 0
 #minanlge = 0.3
 #Emin = .001
 #maxIP = 10
-lookup = open('PiZero_Selection_Params.txt','a+')
+lookup = open('Out_text/PiZero_Selection_Params.txt','a+')
 
 totproc = 0 
 
