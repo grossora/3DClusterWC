@@ -86,7 +86,7 @@ def openingangle(shrA, shrB, vtx):
     pvu = pv/(np.sqrt(pv[0]*pv[0]+pv[1]*pv[1]+pv[2]*pv[2]))
     qvu = qv/(np.sqrt(qv[0]*qv[0]+qv[1]*qv[1]+qv[2]*qv[2]))
     dirA = np.dot(pvu,shrA_dir)
-    dirB = np.dot(pvu,shrB_dir)
+    dirB = np.dot(qvu,shrB_dir)
     #print ' This is the dir dits '
     #print dirA
     #print dirB
@@ -112,8 +112,9 @@ def totcharge(inup, indexset):
 	totq+= inup[s][3]
     # Shitty fit for energy 
     ############# NEEDS TO BE FIxED
-    fenergy = 2.5847*pow(10,-8) *totq +0.017209
-    return fenergy
+    #fenergy = 2.5847*pow(10,-8) *totq +0.017209
+    #return fenergy
+    return totq
     
 
 def mass(ea,eb,angle):

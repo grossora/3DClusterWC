@@ -6,10 +6,10 @@ from sklearn.decomposition import PCA
 
 
 
-def PCA_merge(dataset,labels,datasetidx_holder):
+def PCA_merge(dataset,labels,datasetidx_holder,crit_merge_angle):
     pca_holder = []
     # This is hard code need to be writted better
-    min_angle_merge = 0.3
+    min_angle_merge = crit_merge_angle
     for d in datasetidx_holder:
         dd = []
         for s in d:
@@ -64,6 +64,19 @@ def label_to_idxholder(labels,thresh):
     shi = col.Counter(labels)
     # Shi is a set, and dic lookup 
     cval = [x[0] for x in shi.items() if x[1]>thresh]
+    datasetidx_holder = []
+    datasetidx_v = []
+    for s in cval:
+        datasetidx_v=[]
+        [datasetidx_v.append(i) for i,j in enumerate(labels) if j==s]
+        datasetidx_holder.append(datasetidx_v)
+    return datasetidx_holder
+
+def largestlabel_to_idxholder(labels):
+    shi = col.Counter(labels)
+    largest = shi.most_common(1)[0][0]
+    # Shi is a set, and dic lookup 
+    cval = [x[0] for x in shi.items() if x[0]==largest]
     datasetidx_holder = []
     datasetidx_v = []
     for s in cval:
