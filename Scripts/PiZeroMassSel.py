@@ -11,10 +11,7 @@ sns.set()
 
 #bring in the data into pandas 
 
-#df = pd.read_csv('../PiZero_Selection_Params.txt', sep=" ", header = None)
-#df = pd.read_csv('../PiZero_Selection_Params_Cleaned_first_params.txt', sep=" ", header = None)
-df = pd.read_csv('../PiZero_Selection_Params_Cleaned.txt', sep=" ", header = None)
-#df = pd.read_csv('../PiZero_Selection_Params_Cleaned_dl12_cc150_ang03.txt', sep=" ", header = None)
+df = pd.read_csv('../Out_text/PiZero_Selection_Params_Cleaned.txt', sep=" ", header = None)
 df.columns = ['dirnum','fnum','dalitz','mc_pi_vtx_x','mc_pi_vtx_y','mc_pi_vtx_z','mc_pi_mom_x','mc_pi_mom_y','mc_pi_mom_z','mc_pi_mom_mag','mc_gamma_A_vtx_x','mc_gamma_A_vtx_y','mc_gamma_A_vtx_z','mc_gamma_A_mom_x','mc_gamma_A_mom_y','mc_gamma_A_mom_z','mc_gamma_A_mom_mag','mc_gamma_B_vtx_x','mc_gamma_B_vtx_y','mc_gamma_B_vtx_z','mc_gamma_B_mom_x','mc_gamma_B_mom_y','mc_gamma_B_mom_z','mc_gamma_B_mom_mag','mc_opening_angle','mc_OMcos','mass','pi_vtx_x','pi_vtx_y','pi_vtx_z','Energy_A','gamma_A_vtx_x','gamma_A_vtx_y','gamma_A_vtx_z','Energy_B','gamma_B_vtx_x','gamma_B_vtx_y','gamma_B_vtx_z','opening_angle','OMcos','IP','conversion_A','conversion_B']
 
 
@@ -33,7 +30,6 @@ print 'size of dup  ' , len(df_dup)
 #Here Plot some things 
 #First we want to look at True - reco for angle... we really want that to be the best we can.
 #First we don't worry about charge mixing  
-
 ####################
 # Things I need
 ####################
@@ -51,7 +47,6 @@ n, bins, patches = plt.hist(mc_roa_y, 20, facecolor='blue', alpha=0.75)
 plt.title(r'True opening angle-Reco opening angle :$\mathrm{} \mu=%.3f,\ \sigma=%.3f$' %(mu, sigma))
 plt.show()
 
-
 #### But wait... Hhere is all this spread coming from
 plt.scatter(roa_x,mc_roa_y)
 plt.title('Difference in Opening Angle vs Reco Opening Angle')
@@ -59,15 +54,12 @@ plt.xlabel('RecoOpeningAngle (Rads)')
 plt.show()
 
 # What is the True spread coming from 
-
 ##### Oh... we have problems with large and small angles... 
 # Is there problems anywhere else? 
 plt.scatter(mc_roa_x,mc_roa_y)
 plt.title('Difference in Opening Angle vs Reco Opening Angle')
 plt.xlabel('RecoOpeningAngle (Rads)')
 plt.show()
-
-
 
 # CheCK IP
 rIP = df_uni.IP
@@ -77,33 +69,22 @@ plt.ylabel('MCOpeningAngle (Rads)')
 plt.xlabel('IP')
 plt.show()
 
-
 ##### OK.... Now we need to try to look at energy of things 
 # We are going to need to correct the energy as a function of charge and as a fucntion of drift 
 #First we are going to have to correct for the charge... 
-#def charge_to_mev(tot):
-    #lifetime = 1.16
-    #recomb = 1./.62
-    #W = 23.6/1000000
-    #toadc = 0.00077
-    #mev = tot* W * recomb * lifetime * toadc
-    #return mev
-    #rough convert to time 
 def charge_to_mev(tot,xpos):
     time =  xpos*2.32/256.
     z = time/8.0
     lifetime = pow(math.e,z)
-    #recomb = 1./.64
     recomb = 1./.62
     W = 23.6/1000000
     toadc = 0.0013
-    #toadc = 0.0011
     #toadc = 0.00077
     eslope = -0.463135096874
     eintercept = 77157.7811293
     tot_WC = tot +eslope*tot + eintercept
     mev = tot_WC* W * recomb * lifetime * toadc
-    #mev = 1.2*mev 
+    mev = 1.2*mev 
     return mev
 
 
@@ -125,15 +106,10 @@ def soft_energy(mev):
 
 lo_angle = .25
 hi_angle = 1.8
-#hi_angle = 1.5
-#hi_angle = 2.0
 min_esum = 135.
 min_energy = 40.
-#max_asym = 1.9
 max_asym = 0.9
 ## Magic cuts
-
-
 
 '''
 ## Real magic
@@ -185,38 +161,34 @@ newdf = df.loc[ss]
 df_sel = newdf.drop_duplicates(subset=['dirnum','fnum'])
 print 'working size  of uni  ' , len(df_sel)
 
-
-
 #############################################
-
-
 # Ok... well now lets look at opening angle resolution
 # So first this will go in as an angle... but really it's in a cosine... so we have to be carful 
 # repeate from before
-mc_roa_y = df_sel.mc_opening_angle - df_sel.opening_angle 
-roa_x = df_sel.opening_angle 
-radl_A = df_sel.conversion_A 
-radl_B = df_sel.conversion_B 
-radl_AB = np.concatenate([np.asarray(radl_A ),np.asarray(radl_B)])
+mc_roa_y = np.asarray(df_sel.mc_opening_angle) - np.asarray(df_sel.opening_angle)
+roa_x = np.asarray(df_sel.opening_angle)
+radl_A = np.asarray(df_sel.conversion_A)
+radl_B = np.asarray(df_sel.conversion_B)
+radl_AB = np.concatenate([radl_A,radl_B])
 #Plot a histogram of the angular diferance
+
+### 
 
 n, bins, patches = plt.hist(mc_roa_y, 20, facecolor='blue', alpha=0.75)
 (mu, sigma) = norm.fit(mc_roa_y)
 plt.title(r'True opening angle-Reco opening angle :$\mathrm{} \mu=%.3f,\ \sigma=%.3f$' %(mu, sigma))
 plt.show()
 
-
 #### But wait... Hhere is all this spread cossss from
 plt.scatter(roa_x,mc_roa_y)
 plt.title('Difference in Opening Angle vs Reco Opening Angle')
 plt.xlabel('RecoOpeningAngle (Rads)')
 plt.ylabel('OpeningAnlge difference (Rads)')
-plt.savefig('/home/ryan/Documents/WireCell/10_3_16/pi0_angledif_vs_recoangle.png')
+#plt.savefig('/home/ryan/Documents/WireCell/10_3_16/pi0_angledif_vs_recoangle.png')
 plt.show()
 
 ##### Oh... we have problems with large and small angles... 
 # Is there problems anywhere else? 
-
 
 # CheCK IP
 rIP = df_sel.IP
@@ -224,7 +196,7 @@ plt.scatter(rIP,mc_roa_y)
 plt.title('Difference in Opening Angle vs IP')
 plt.ylabel('OpeningAnlge difference (Rads)')
 plt.xlabel('IP')
-plt.savefig('/home/ryan/Documents/WireCell/10_3_16/pi0_angledif_vs_ip.png')
+#plt.savefig('/home/ryan/Documents/WireCell/10_3_16/pi0_angledif_vs_ip.png')
 plt.show()
 
 
@@ -237,10 +209,8 @@ plt.xlabel('Length(cm)')
 plt.show()
 
 
-
-
 # Now for OMC
-mcr_omc_sel = np.sqrt(df_sel.mc_OMcos) - np.sqrt(df_sel.OMcos)
+mcr_omc_sel = np.sqrt(np.asarray(df_sel.mc_OMcos)) - np.sqrt(np.asarray(df_sel.OMcos))
 #Plot a histogram of the angular diferance
 n, bins, patches = plt.hist(mcr_omc_sel, 20, facecolor='blue', alpha=0.75)
 (mu, sigma) = norm.fit(mcr_omc_sel)
@@ -280,10 +250,10 @@ MCOMC = np.asarray(mcomc)
 
 #print E_B
 
-mcr_ee_y = np.sqrt(df_sel.mc_gamma_A_mom_mag* df_sel.mc_gamma_B_mom_mag)*1000 
+mcr_ee_y = np.sqrt(np.asarray(df_sel.mc_gamma_A_mom_mag)* np.asarray(df_sel.mc_gamma_B_mom_mag))*1000 
 mcr_ee_sdf =  np.sqrt(E_A*E_B)
 #mcr_ee_y = np.sqrt(df_uni.mc_gamma_A_mom_mag* df_uni.mc_gamma_B_mom_mag)*1000 - np.sqrt(E_A*E_B)
-mcr_ee_y_res = (np.sqrt(df_sel.mc_gamma_A_mom_mag* df_sel.mc_gamma_B_mom_mag)*1000 - np.sqrt(E_A*E_B))/(np.sqrt(df_sel.mc_gamma_A_mom_mag* df_sel.mc_gamma_B_mom_mag)*1000)
+mcr_ee_y_res = (np.sqrt(np.asarray(df_sel.mc_gamma_A_mom_mag)* np.asarray(df_sel.mc_gamma_B_mom_mag))*1000 - np.sqrt(E_A*E_B))/(np.sqrt(np.asarray(df_sel.mc_gamma_A_mom_mag)* np.asarray(df_sel.mc_gamma_B_mom_mag))*1000)
 
 #Lets look hot the sqrt ee resolution
 n, bins, patches = plt.hist(mcr_ee_y_res, 20, facecolor='blue', alpha=0.75)
@@ -296,8 +266,6 @@ plt.scatter(E_A+E_B,MCE_A+MCE_B)
 plt.title('MC EA+EB vs EA+EB')
 plt.xlabel('Reco EA+EB (MeV)')
 plt.ylabel('Truth EA+EB (MeV)')
-plt.savefig('/home/ryan/Documents/WireCell/10_3_16/EAEBSumRes.png')
-#plt.savefig('/home/ryan/Documents/WireCell/10_3_16/pi0_angledif_vs_recoangle.png')
 
 plt.show()
 
@@ -354,7 +322,7 @@ rmass = [x for x in nmass if x<400]
 n, bins, patches = plt.hist(rmass, 30, facecolor='blue', alpha=0.75)
 (mu, sigma) = norm.fit(rmass)
 plt.title(r' mass :$\mathrm{} \mu=%.3f,\ \sigma=%.3f$' %(mu, sigma))
-plt.savefig('/home/ryan/Documents/WireCell/10_3_16/pi0_mass.png')
+#plt.savefig('/home/ryan/Documents/WireCell/10_3_16/pi0_mass.png')
 plt.xlabel(' Mass (MeV)')
 plt.ylabel(' Events / 12 MeV')
 plt.show()
@@ -367,7 +335,7 @@ rEmcOmass = [x for x in nrEmcOmass if x<400]
 n, bins, patches = plt.hist(mcErOmass, 34, facecolor='blue', alpha=0.75)
 (mu, sigma) = norm.fit(mcErOmass)
 plt.title(r'mc Energy Reco OMC mass!! :$\mathrm{} \mu=%.3f,\ \sigma=%.3f$' %(mu, sigma))
-plt.savefig('/home/ryan/Documents/WireCell/10_3_16/pi0_massMCEnergy.png')
+#plt.savefig('/home/ryan/Documents/WireCell/10_3_16/pi0_massMCEnergy.png')
 plt.xlabel(' Mass (MeV)')
 plt.ylabel(' Events / 12 MeV')
 plt.show()
@@ -375,7 +343,7 @@ plt.show()
 n, bins, patches = plt.hist(rEmcOmass, 34, facecolor='blue', alpha=0.75)
 (mu, sigma) = norm.fit(rEmcOmass)
 plt.title(r'reco Energy mc OMC mass!! :$\mathrm{} \mu=%.3f,\ \sigma=%.3f$' %(mu, sigma))
-plt.savefig('/home/ryan/Documents/WireCell/10_3_16/pi0_massMCAngle.png')
+#plt.savefig('/home/ryan/Documents/WireCell/10_3_16/pi0_massMCAngle.png')
 plt.xlabel(' Mass (MeV)')
 plt.ylabel(' Events / 12 MeV')
 plt.show()
@@ -383,7 +351,7 @@ plt.show()
 
 n, bins, patches = plt.hist([rmass,mcErOmass,rEmcOmass], 40, alpha=0.75,histtype='bar')
 plt.title('reco Energy mc OMC mass')
-plt.savefig('/home/ryan/Documents/WireCell/10_3_16/pi0_massMCAngle.png')
+#plt.savefig('/home/ryan/Documents/WireCell/10_3_16/pi0_massMCAngle.png')
 plt.xlabel(' Mass (MeV)')
 plt.ylabel(' Events / 12 MeV')
 plt.show()
