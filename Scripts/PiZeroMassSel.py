@@ -6,6 +6,7 @@ import math as math
 import matplotlib.mlab as mlab
 from scipy.stats import norm
 import collections as col
+from itertools import combinations
 
 
 sns.set()
@@ -21,13 +22,32 @@ for index, row in df.iterrows():
     d = row['dirnum']
     fi = row['fnum']
     v = int(d)*10000+int(fi)
-    print v
     fam.append(v)
 
 print len(fam)
 print 'total number of files processed'
 print len(col.Counter(fam))
 
+#Get the nshowers 
+#first get max values for doubles 
+mult_max = max(col.Counter(fam).values())
+# Solve the nC2 up till n
+nspot=[]
+z=2
+nc2=0
+while nc2 <mult_max:
+    nc2 = len([x for x in combinations(np.arange(1,z),2)])
+    nspot.append(nc2)
+    z +=1
+print nspot
+# now loop thorugh the famil and put i in 
+nshowers = []
+test = col.Counter(col.Counter(fam).values())
+for m in nspot:
+    nshowers.append(test[m])
+print nshowers
+
+#
 
 
 
