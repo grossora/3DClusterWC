@@ -5,6 +5,7 @@ import pylab as plt
 import math as math
 import matplotlib.mlab as mlab
 from scipy.stats import norm
+import collections as col
 
 
 sns.set()
@@ -14,18 +15,38 @@ sns.set()
 df = pd.read_csv('../Out_text/PiZero_Selection_Params_Cleaned.txt', sep=" ", header = None)
 df.columns = ['dirnum','fnum','dalitz','mc_pi_vtx_x','mc_pi_vtx_y','mc_pi_vtx_z','mc_pi_mom_x','mc_pi_mom_y','mc_pi_mom_z','mc_pi_mom_mag','mc_gamma_A_vtx_x','mc_gamma_A_vtx_y','mc_gamma_A_vtx_z','mc_gamma_A_mom_x','mc_gamma_A_mom_y','mc_gamma_A_mom_z','mc_gamma_A_mom_mag','mc_gamma_B_vtx_x','mc_gamma_B_vtx_y','mc_gamma_B_vtx_z','mc_gamma_B_mom_x','mc_gamma_B_mom_y','mc_gamma_B_mom_z','mc_gamma_B_mom_mag','mc_opening_angle','mc_OMcos','mass','pi_vtx_x','pi_vtx_y','pi_vtx_z','Energy_A','gamma_A_vtx_x','gamma_A_vtx_y','gamma_A_vtx_z','Energy_B','gamma_B_vtx_x','gamma_B_vtx_y','gamma_B_vtx_z','opening_angle','OMcos','IP','conversion_A','conversion_B']
 
+# First find out how many different files we have
+fam = []
+for index, row in df.iterrows():
+    d = row['dirnum']
+    fi = row['fnum']
+    v = int(d)*10000+int(fi)
+    print v
+    fam.append(v)
+
+print len(fam)
+print 'total number of files processed'
+print len(col.Counter(fam))
+
+
+
 
 #########################################
 ##### First show things if proc is unique 
 #########################################
-df_uni = df.drop_duplicates(subset=['dirnum','fnum']) 
+df_uni = df.drop_duplicates(subset=['dirnum','fnum'],keep=False) 
 print 'size of uni  ' , len(df_uni)
 
+df_dup = df[df.duplicated(['dirnum','fnum'],keep=False)]
+print 'size of dup  ' , len(df_dup)
+
+'''
 df_dub = pd.concat([df,df_uni])
 df_gpby = df.groupby(list(df_dub.columns))
 idx = [x[0] for x in df_gpby.indices.values() if len(x) == 1]
 df_dup = df_dub.iloc[idx]
 print 'size of dup  ' , len(df_dup)
+'''
 
 #Here Plot some things 
 #First we want to look at True - reco for angle... we really want that to be the best we can.
