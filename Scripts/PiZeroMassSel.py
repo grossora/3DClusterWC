@@ -1,3 +1,4 @@
+import sys
 import pandas as pd 
 import numpy as np
 import seaborn as sns 
@@ -7,13 +8,14 @@ import matplotlib.mlab as mlab
 from scipy.stats import norm
 import collections as col
 from itertools import combinations
-
-
 sns.set()
 
 #bring in the data into pandas 
-
-df = pd.read_csv('../Out_text/PiZero_Selection_Params_Cleaned.txt', sep=" ", header = None)
+if(len(sys.argv)==1):
+    df = pd.read_csv('../Out_text/PiZero_Selection_Params_Cleaned.txt', sep=" ", header = None)
+else:
+    df = pd.read_csv('{}'.format(sys.argv[2]), sep=" ", header = None)
+   
 df.columns = ['dirnum','fnum','dalitz','mc_pi_vtx_x','mc_pi_vtx_y','mc_pi_vtx_z','mc_pi_mom_x','mc_pi_mom_y','mc_pi_mom_z','mc_pi_mom_mag','mc_gamma_A_vtx_x','mc_gamma_A_vtx_y','mc_gamma_A_vtx_z','mc_gamma_A_mom_x','mc_gamma_A_mom_y','mc_gamma_A_mom_z','mc_gamma_A_mom_mag','mc_gamma_B_vtx_x','mc_gamma_B_vtx_y','mc_gamma_B_vtx_z','mc_gamma_B_mom_x','mc_gamma_B_mom_y','mc_gamma_B_mom_z','mc_gamma_B_mom_mag','mc_opening_angle','mc_OMcos','mass','pi_vtx_x','pi_vtx_y','pi_vtx_z','Energy_A','gamma_A_vtx_x','gamma_A_vtx_y','gamma_A_vtx_z','Energy_B','gamma_B_vtx_x','gamma_B_vtx_y','gamma_B_vtx_z','opening_angle','OMcos','IP','conversion_A','conversion_B']
 
 # First find out how many different files we have
