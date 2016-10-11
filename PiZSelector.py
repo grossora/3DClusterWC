@@ -85,10 +85,17 @@ for f in sys.argv[1:]:
 
     
 	
-    if len(datasetidx_holder)<2:
+    if len(datasetidx_holder)==1:
 	print 'segfault' 
         ##################################    FILLLLLLLLLLLLL
 	fline =[ -4 for x in range(41)]
+	rfline = dirnum+' '+fnum+' '+ str(fline).split('[')[1].rsplit(']')[0].replace(',','') + '\n'
+	lookup.writelines(rfline)
+	continue
+    if len(datasetidx_holder)==0:
+	print 'segfault' 
+        ##################################    FILLLLLLLLLLLLL
+	fline =[ -5 for x in range(41)]
 	rfline = dirnum+' '+fnum+' '+ str(fline).split('[')[1].rsplit(']')[0].replace(',','') + '\n'
 	lookup.writelines(rfline)
 	continue
