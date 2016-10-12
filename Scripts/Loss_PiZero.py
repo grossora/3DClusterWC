@@ -17,10 +17,11 @@ if(len(sys.argv)==1):
 else:
     df = pd.read_csv('{}'.format(sys.argv[1]), sep=" ", header = None)
    
-df.columns = ['dirnum','fnum','dalitz','mc_pi_vtx_x','mc_pi_vtx_y','mc_pi_vtx_z','mc_pi_mom_x','mc_pi_mom_y','mc_pi_mom_z','mc_pi_mom_mag','mc_gamma_A_vtx_x','mc_gamma_A_vtx_y','mc_gamma_A_vtx_z','mc_gamma_A_mom_x','mc_gamma_A_mom_y','mc_gamma_A_mom_z','mc_gamma_A_mom_mag','mc_gamma_B_vtx_x','mc_gamma_B_vtx_y','mc_gamma_B_vtx_z','mc_gamma_B_mom_x','mc_gamma_B_mom_y','mc_gamma_B_mom_z','mc_gamma_B_mom_mag','mc_opening_angle','mc_OMcos','mass','pi_vtx_x','pi_vtx_y','pi_vtx_z','Energy_A','gamma_A_vtx_x','gamma_A_vtx_y','gamma_A_vtx_z','Energy_B','gamma_B_vtx_x','gamma_B_vtx_y','gamma_B_vtx_z','opening_angle','OMcos','IP','conversion_A','conversion_B']
+#df.columns = ['dirnum','fnum','dalitz','mc_pi_vtx_x','mc_pi_vtx_y','mc_pi_vtx_z','mc_pi_mom_x','mc_pi_mom_y','mc_pi_mom_z','mc_pi_mom_mag','mc_gamma_A_vtx_x','mc_gamma_A_vtx_y','mc_gamma_A_vtx_z','mc_gamma_A_mom_x','mc_gamma_A_mom_y','mc_gamma_A_mom_z','mc_gamma_A_mom_mag','mc_gamma_B_vtx_x','mc_gamma_B_vtx_y','mc_gamma_B_vtx_z','mc_gamma_B_mom_x','mc_gamma_B_mom_y','mc_gamma_B_mom_z','mc_gamma_B_mom_mag','mc_opening_angle','mc_OMcos','mass','pi_vtx_x','pi_vtx_y','pi_vtx_z','Energy_A','gamma_A_vtx_x','gamma_A_vtx_y','gamma_A_vtx_z','Energy_B','gamma_B_vtx_x','gamma_B_vtx_y','gamma_B_vtx_z','opening_angle','OMcos','IP','conversion_A','conversion_B']
+
+df.columns = ['dirnum','fnum','dalitz','mc_pi_vtx_x','mc_pi_vtx_y','mc_pi_vtx_z','mc_pi_mom_x','mc_pi_mom_y','mc_pi_mom_z','mc_pi_mom_mag','mc_gamma_A_vtx_x','mc_gamma_A_vtx_y','mc_gamma_A_vtx_z','mc_gamma_A_mom_x','mc_gamma_A_mom_y','mc_gamma_A_mom_z','mc_gamma_A_mom_mag','mc_gamma_B_vtx_x','mc_gamma_B_vtx_y','mc_gamma_B_vtx_z','mc_gamma_B_mom_x','mc_gamma_B_mom_y','mc_gamma_B_mom_z','mc_gamma_B_mom_mag','mc_opening_angle','mc_OMcos','mass','pi_vtx_x','pi_vtx_y','pi_vtx_z','Energy_A','Charge_A','gamma_A_vtx_x','gamma_A_vtx_y','gamma_A_vtx_z','Energy_B','Charge_A','gamma_B_vtx_x','gamma_B_vtx_y','gamma_B_vtx_z','opening_angle','OMcos','IP','conversion_A','conversion_B']
 
 # First find out how many different files we have
-
 def Nshowers_v(df):
     fam = []
     for index, row in df.iterrows():

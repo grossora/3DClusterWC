@@ -9,7 +9,7 @@ def piz_mc_info(infile):
 	#Is this a non-dalitz
 	if en.mc_pdg[1]!=22 or en.mc_pdg[2]!=22:
 	    # Write out a bail list to return
-	    bail = [-1 for x in xrange(0,23)]
+	    bail = [-1 for x in xrange(0,25)]
             bails = str(bail).split('[')[1].rsplit(']')[0].replace(',','')
 	    return bails
 	vtx_pi_x = en.mc_startXYZT[0]

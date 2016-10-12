@@ -115,7 +115,24 @@ def totcharge(inup, indexset):
     #fenergy = 2.5847*pow(10,-8) *totq +0.017209
     #return fenergy
     return totq
-    
+
+def comp_lifetime(charge,xpos):
+    time =  xpos*2.32/256. # This is hard coded guess
+    z = time/8.0
+    lifetime = pow(math.e,z)
+    return charge*lifetime
+
+def corrected_energy(inup, indexset):
+    tot =0.0
+    for s in indexset:
+	# Find the X position and then correct for energy with lifetime
+	tot+= comp_lifetime(inup[s][3],inup[s][0])
+    # Shitty fit for energy 
+    ############# NEEDS TO BE FIxED
+    #fenergy = 2.5847*pow(10,-8) *totq +0.017209
+    #return fenergy
+    return tot
+       
 
 def mass(ea,eb,angle):
     # make sure things are ok 
