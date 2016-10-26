@@ -54,7 +54,7 @@ def PCA_merge(dataset,labels,datasetidx_holder,crit_merge_angle):
         #print 'These below will all be merged '
         matchlabel = labels[datasetidx_holder[s[0]][0]] # grabbing the cluster index from datasetholder using s[0] and looking at the first point in that cluster to get the label
         for z in xrange(1,len(s)):
-            print s[z]
+           # print s[z]
             for dlab in datasetidx_holder[z]:
                 labels[dlab] = matchlabel
 
