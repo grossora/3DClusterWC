@@ -1,5 +1,9 @@
 from sklearn.cluster import KMeans , MeanShift
 import numpy as np
+from operator import itemgetter
+
+
+
 
 
 ############################################
@@ -116,5 +120,91 @@ def crawler(inup, dist, mincluster ):
 #########   
     return indexlist
 
+
+
+
+############################################
+######### crawler nn     ###############
+############################################
+def crawlernn(inup, dist, min_cls ):
+
+    #######
+    #### some stuff at the start that won't change
+    #######
+    clusterlabel = 0
+    indexlist = [-1 for x in range(len(inup))]
+    distsq_max = pow(dist,2)
+    def nn(pta,ptb):
+	distsq = pow(pta[1]-ptb[1],2) + pow(pta[2]-ptb[2],2) + pow(pta[3]-ptb[3],2)
+	if distsq < distsq_max:
+	    return True
+    #######
+    #### some stuff at the start that won't change
+    #######
+
+    # Happens once
+    unusedlist = [(x,inup[x][0],inup[x][1],inup[x][2]) for x in range(len(inup))]
+    ## First sort the list based on z position since is it has the most spread
+    unusedlist.sort(key=itemgetter(3))
+    
+### Work comes back to here
+#### While unusedlist > min_cls
+
+    while len(unusedlist)>min_cls:
+
+	#Find the minium and max  batch for z
+	minbatch_z = unusedlist[0][3]
+	#This makes the batch list for unused to work with. 
+	unused_batchlist = [x for x in unusedlist if x[3]<minbatch_z+dist]
+	# Since it's sorted we can Use the last point as the farthest away point. 
+	maxbatch_z = unused_batchlist[-1][3]
+
+	### Now make the added points list
+	unused = unused_batchlist
+	#Start a cluster
+	temp_cluster = [unused[0]]
+	#Start wit this added  point
+	added_points =  [temp_cluster[0]]
+	# remove it from the unused list since we will be uing it in the cluster
+	unused.pop(0)
+
+	temp_maxbatch_z = maxbatch_z
+        while len(added_points)!=0:
+	    tmp_added = []
+	    for a in added_points:
+	        #### Get some stuff for NN
+	        tmp_unused = []
+	        for u in unused:
+		    if nn(a,u):
+		        tmp_added.append(u)
+		        temp_cluster.append(u)
+		    if not nn(a,u):
+		        tmp_unused.append(u)
+	        unused = tmp_unused
+	        # Readjust the unused by adding extra points 
+	        # Add points that are distance max z of temp cluster +dist
+	        # this is going to be a time succk... but we need it for hookes with tracks on boundaries 
+
+	    tunused = [x for x in unusedlist if  x[3] < max(temp_cluster,key=itemgetter(3))[3]+dist]
+	    # Now remove the entries from front bactch that are already in the temp cluster
+	    unused = [x for x in tunused if x not in temp_cluster]
+	    added_points = tmp_added
+	    
+
+        # When getting out of the While we should have we have to clean up
+        if len(temp_cluster) >= min_cls:
+	    for idx in temp_cluster:
+	        # Looping over the temp cluster and filling out the cluster label for the at the index in the index list
+	        indexlist[idx[0]] = clusterlabel
+	    # KEep it and remove these points from the unused list
+	    clusterlabel+=1
+	    unusedlist = [x for x in unusedlist if x not in temp_cluster]
+	
+        if len(temp_cluster) < min_cls:
+	    unusedlist = [x for x in unusedlist if x not in temp_cluster]
+	# Still remove points from the unused
+	# because this means we tried them
+    ### The unused list should still remain sorted... so we can just pick up with the next batch step	
+    return indexlist
 
 
