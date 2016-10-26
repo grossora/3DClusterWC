@@ -13,6 +13,9 @@ import collections as col
 import SParams.axisfit as axfi 
 import SParams.selpizero as selpz
 import SParams.merger as mr
+import Clustering.protocluster as pc
+import Utils.prefilter as pf
+
 
 
 rmass_v = []
@@ -75,13 +78,22 @@ for f in sys.argv[1:]:
 	continue
     totproc +=1
     print 'Current Event -->  Dir: ', str(dirnum) +'  File number ' + str(fnum)
+#################3
+#Turn Dataset into a vox
+    pfl = pf.Voxalizedata(dataset,128,116,500)
+    dt = pf.Vdataset(pfl,20000)
+    dataset = [ [dt[i][0],dt[i][1],dt[i][2], dt[i][3][0]] for i in range(len(dt))]
+    print 'size of Vox Data ' , len(dataset)
+    print dataset
+
+#################3
    # proc +=1
     labels = pc.crawler(dataset,9,10)
     #labels = pc.crawler(dataset,8.,10)
-    datasetidx_holder = mr.label_to_idxholder(labels,150)
-    nlabels = mr.PCA_merge(dataset,labels,datasetidx_holder,0.35)
-    labels = nlabels
-    datasetidx_holder = mr.label_to_idxholder(labels,150)
+    datasetidx_holder = mr.label_to_idxholder(labels,5)
+    #nlabels = mr.PCA_merge(dataset,labels,datasetidx_holder,0.35)
+    #labels = nlabels
+    datasetidx_holder = mr.label_to_idxholder(labels,5)
 
 
     

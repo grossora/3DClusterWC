@@ -14,6 +14,8 @@ import SParams.axisfit as axfi
 import SParams.merger as mr 
 import math as math
 import time
+import Utils.prefilter as pf
+
 
 #Cheating on a few graphical things
 from pylab import MaxNLocator
@@ -49,7 +51,7 @@ maxdatasetsize = 15000
 ###############
 
 #lookup = open('CL_Param_Opt_Photon.txt','a+')
-lookup = open('Out_text/CL_Param_Opt_Photon_Single.txt','a+')
+lookup = open('Out_text/CL_Param_Opt_Photon_Single_vox_nomerge.txt','a+')
 #lookup = open('CL_Param_Opt_Photon_Single.txt','a+')
 
 #Loop through all the files
@@ -64,15 +66,13 @@ for f in sys.argv[1:]:
     dirnum = f.rsplit('/',1)[0].rsplit('/',1)[1]
     fnum = f.rsplit('/',1)[1].rsplit('.')[0].rsplit('_',1)[1]
     dist_cl = -1
-
     #Shit fast hack
     if bypass:
-        if int(dirnum) < 18:
+        if int(dirnum) < 7:
 	    continue
-        if int(fnum) < 17:
+        if int(fnum) < 30:
 	    continue
     bypass = False
-    
 
     '''
     ########## 
@@ -115,10 +115,21 @@ for f in sys.argv[1:]:
 
     '''
     # Now that  we have the datafile... lets run mcinfo
+
     TruthString = mh.gamma_mc_info('{}'.format(f)) # Needs to be wrote
     TruthStringDep = mh.gamma_mc_dep('{}'.format(f)) # Needs to be wrote
     predataset = dh.ConvertWC_InTPC('{}'.format(f))
     dataset = dh.Unique(predataset)
+
+    #################3
+    #Turn Dataset into a vox
+    pfl = pf.Voxalizedata(dataset,128,116,500)
+    dt = pf.Vdataset(pfl,20000)
+    dataset = [ [dt[i][0],dt[i][1],dt[i][2], dt[i][3][0]] for i in range(len(dt))]
+    print 'size of Vox Data ' , len(dataset)
+    print dataset
+    #################3
+
 
     if len(dataset)>maxdatasetsize:
 	continue
@@ -148,9 +159,9 @@ for f in sys.argv[1:]:
 
 		# Here we do some merging... 
 		# Make merger a fucntion of angle then loop over differnt ones
-		labels = mr.PCA_merge(dataset,labels,datasetidx_holder,ma)
+		#labels = mr.PCA_merge(dataset,labels,datasetidx_holder,ma)
 		#labels = mr.PCA_merge(dataset,labels,datasetidx_holder)
-		datasetidx_holder = mr.label_to_idxholder(labels,clss)
+		#datasetidx_holder = mr.label_to_idxholder(labels,clss)
 
 	#------ -work around this
 		##### Grab the largest cluster and inspect
@@ -199,8 +210,7 @@ for f in sys.argv[1:]:
 		### RECO Line 
 		RecoString = str(selectedcharge)+' '+ str(FracSel) + ' ' + str(FracRemain) +' '+ str(Angle_Dif)+' '+str(len(nclusters)) +'\n'
 
-		lookup = open('Out_text/CL_Param_Opt_Photon_Single.txt','a+')
-		#lookup = open('CL_Param_Opt_Photon.txt','a+')
+                lookup = open('Out_text/CL_Param_Opt_Photon_Single_vox_nomerge.txt','a+')
 		#Fill out the string and add it to the file
 		line = str(dirnum)+' '+ str(fnum)+' '+ str(dist_cl)+' '+str(clss) +' '+str(ma)+ ' '+ TruthString +' '+TruthStringDep+ ' ' + RecoString
 		#line = str(dirnum)+' '+ str(fnum)+' '+ str(dist_cl) +' '+ TruthString + ' ' + RecoString
