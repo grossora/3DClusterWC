@@ -50,6 +50,21 @@ def ConvertWC_InTPC(infile):
     cleanspta = Unique(spta)
     return cleanspta
 
+def ConvertWC_InTPC_thresh(infile,qt):
+    #Bring in the file 
+    f = ROOT.TFile("{}".format(infile))
+    t = f.Get("T_rec_charge")
+    # Parse into an array 
+    sptarray = []
+    for entry in t:
+	if entry.q>qt and entry.x>0 and entry.x<256: 
+	    sptarray.append([entry.x,entry.y,entry.z,entry.q])
+    #make this an ndarray    
+    spta = np.asanyarray(sptarray)
+    cleanspta = Unique(spta)
+    return cleanspta
+
+
 def ConvertWC_InRange(infile,xlo,xhi,ylo,yhi,zlo,zhi):
     #Bring in the file 
     f = ROOT.TFile("{}".format(infile))
@@ -64,6 +79,20 @@ def ConvertWC_InRange(infile,xlo,xhi,ylo,yhi,zlo,zhi):
     cleanspta = Unique(spta)
     return cleanspta
  
+def ConvertWC_InRange_thresh(infile,qt,xlo,xhi,ylo,yhi,zlo,zhi):
+    #Bring in the file 
+    f = ROOT.TFile("{}".format(infile))
+    t = f.Get("T_rec_charge")
+    # Parse into an array 
+    sptarray = []
+    for entry in t:
+	if entry.q>qt and entry.x>xlo and entry.x<xhi and entry.y>ylo and entry.y<yhi and entry.z>zlo and entry.z<zhi: 
+	    sptarray.append([entry.x,entry.y,entry.z,entry.q])
+    #make this an ndarray    
+    spta = np.asanyarray(sptarray)
+    cleanspta = Unique(spta)
+    return cleanspta
+
 def ConvertWCMC(infile):
     #Bring in the file 
     f = ROOT.TFile("{}".format(infile))
