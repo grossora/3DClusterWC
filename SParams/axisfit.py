@@ -82,6 +82,19 @@ def PCAParams(inup,cl_idx_v,n_degree):
 	t = [inup[s][0],inup[s][1],inup[s][2]]
 	cl_pts.append(t)
     pca = PCA(n_components=n_degree)
-    pca.fit(dd)
+    pca.fit(cl_pts)
     par = pca.explained_variance_ratio_
+    return par
+
+def PCAParams_dir(inup,cl_idx_v,n_degree):
+    # inup is the whole dataset, cl_idx is the cluster index position for points
+    #make the dataset for the cluster into an np array 
+    # Data is in the form [[x,y,z].[],...[xn,yn,zn]]
+    cl_pts = []
+    for s in cl_idx_v: 
+	t = [inup[s][0],inup[s][1],inup[s][2]]
+	cl_pts.append(t)
+    pca = PCA(n_components=n_degree)
+    pca.fit(cl_pts)
+    par = pca.components_
     return par
