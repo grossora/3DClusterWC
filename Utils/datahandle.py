@@ -4,6 +4,105 @@ import ROOT
 
 #Need to define detector volumes
 
+
+
+def F_Info(f):
+    event = f.rsplit('/',1)[1].split('.')[0].split('_')[1]
+    run = f.rsplit('/',1)[1].split('.')[0].split('_')[2]
+    subrun = f.rsplit('/',1)[1].split('.')[0].split('_')[3]
+    GoodBad = True
+    ers = str(event)+'_'+str(run)+'_'+str(subrun)
+    # The file
+    fi = ROOT.TFile("{}".format(f))
+    #### Check if file is zomobie
+    if fi.IsZombie():
+        print 'We have a Zombie!'
+        fline =[ -1 for x in range(18)] ### Fix to what ever the number is
+        rfline = ers+' '+ str(fline).split('[')[1].rsplit(']')[0].replace(',','')+ '\n'
+        #rfline = event+' '+run+' '+subrun+' '+ str(fline).split('[')[1].rsplit(']')[0].replace(',','')+ '\n'
+	GoodBad = False
+	return GoodBad, ers 
+    rt= fi.Get("T_rec_charge")
+    if rt.GetEntries()==0:
+        print 'AHHHH Got nothing...'
+        fline =[ -2 for x in range(18)] ### Fix to what ever the number is
+        rfline = ers+' '+ str(fline).split('[')[1].rsplit(']')[0].replace(',','')+ '\n'
+        #rfline = event+' '+run+' '+subrun+' '+ str(fline).split('[')[1].rsplit(']')[0].replace(',','')+ '\n'
+	GoodBad = False
+	return GoodBad, ers 
+    return GoodBad , ers
+
+def ROI_Info(ers):
+    roi_file = open('ROI_Visual.txt','r')
+    #roi_file = open('../ROI_Visual.txt','r')
+    fid_v =[]
+    for line in roi_file:
+        # split up the line
+        line_v = line.split()
+        if line_v[0] == ers:
+        #if line_v[0] == event +'_'+run+'_'+subrun:
+        #if line_v[0] == ers: # use this
+            fid_v = line_v[1:]
+    # Return the curser to the top
+    roi_file.seek(0)
+    hasROI = True
+    if len(fid_v) ==0:
+        print 'You do not have an ROI for this... Would you like to put one in?'
+	hasROI = False
+	return hasROI
+    return hasROI , fid_v
+
+import matplotlib.pyplot as plt
+from matplotlib import style
+from mpl_toolkits.mplot3d import Axes3D
+style.use("ggplot")
+colors = 1000*['r','g','b','c','k','y','m']
+markers = 1000*['o','*','D','s','+']
+
+
+def Make_Fig(dataset,datasetidx_holder,labels,dpath,plt_title ):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    cl_idx_v = [item for sublist in datasetidx_holder for item in sublist]
+    for i in cl_idx_v: #This loop over just the return/passed clusters
+        if labels[i] == -1:
+            continue
+        ax.scatter(dataset[i][2], dataset[i][0], dataset[i][1], c=colors[labels[i]], marker=markers[labels[i]])
+    ax.set_xlabel(' Z ')
+    ax.set_ylabel(' X ')
+    ax.set_zlabel(' Y ')
+    ax.set_title(plt_title)
+    path = dpath+ '/'+plt_title+'.png'
+    plt.savefig(path)
+    plt.clf()
+    return
+
+    
+
+def Rebase_Dataset_Keep_Clustered(dataset, holder):
+    # This will keep only the ojects that are  already clustered and rebase the dataset to just points that are in whatever holder_set comes in 
+    datasetidx_holder_rebase=[]
+    dataset_rebase = [ ]
+    itr_r = 0
+    labels_rebase = []
+    labels_itr = 0
+    for a in holder:
+        temp_holder = []
+        for i in a:
+            dataset_rebase.append([dataset[i][0],dataset[i][1],dataset[i][2],dataset[i][3]])
+            temp_holder.append(itr_r)
+            itr_r+=1
+            labels_rebase.append(labels_itr)
+        datasetidx_holder_rebase.append(temp_holder)
+        labels_itr+=1
+
+    return dataset_rebase, datasetidx_holder_rebase , labels_rebase
+
+
+
+
+    
+
 def Unique(infile): 
     #returns all unique
     b = np.ascontiguousarray(infile).view(np.dtype((np.void, infile.dtype.itemsize * infile.shape[1])))
