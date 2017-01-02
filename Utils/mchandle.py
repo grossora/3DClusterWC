@@ -1,6 +1,62 @@
 import math as math
 import ROOT
 
+
+def mc_roi( f):
+    tf = ROOT.TFile("{}".format(f))
+    mctree = tf.Get("TMC")
+    _x_particle = []
+    _y_particle = []
+    _z_particle = []
+    _t_particle = []
+    _px_particle = []
+    _py_particle = []
+    _pz_particle = []
+    _pp_particle = []
+    # Make the lists for things to look though
+    for i in mctree:
+	id_list = [x for x in i.mc_id]
+	mother_list = [ x for x in i.mc_mother]
+	pdg_list = [ x for x in i.mc_pdg]
+	process_list = [ x for x in i.mc_process]
+	xyzt_list = [[x] for x in i.mc_startXYZT]
+	xyzp_list = [[x] for x in i.mc_startMomentum]
+        # Sort out the xyztlist
+        for itr in range(len(xyzt_list)):
+            modu = itr%4
+            if modu ==0:
+                _x_particle.append(str(xyzt_list[itr]).split('[')[1].split(']')[0])
+                _px_particle.append(str(xyzp_list[itr]).split('[')[1].split(']')[0])
+            if modu ==1:
+                _y_particle.append(str(xyzt_list[itr]).split('[')[1].split(']')[0])   
+                _py_particle.append(str(xyzp_list[itr]).split('[')[1].split(']')[0])   
+            if modu ==2:
+                _z_particle.append(str(xyzt_list[itr]).split('[')[1].split(']')[0])
+                _pz_particle.append(str(xyzp_list[itr]).split('[')[1].split(']')[0])   
+            if modu ==3:
+                _t_particle.append(str(xyzt_list[itr]).split('[')[1].split(']')[0])
+                _pp_particle.append(str(xyzp_list[itr]).split('[')[1].split(']')[0])   
+ 
+    # Get the pi0 list
+    pi0_itr = []    
+    pi0_mother_itr = []    
+ 
+    for itr in range(len(pdg_list)):
+        if pdg_list[itr]==111:
+            pi0_itr.append(itr)
+            pi0_mother_itr =  mother_list[itr]
+
+    # Make the string It will be a vector of strings 
+    ret_string_vec = [] 
+    for a in range(len(pi0_itr)):
+        N_pi0 = str(len(pi0_itr))
+	ID_pi0 = str(a)
+	xyzt_string = str(_x_particle[a])+' ' +str(_y_particle[a])+' '+str(_z_particle[a])+' '+str(_t_particle[a])
+	xyzp_string = str(_px_particle[a])+' ' +str(_py_particle[a])+' '+str(_pz_particle[a])+' '+str(_pp_particle[a])
+ 	fstr = N_pi0+' ' + ID_pi0+' '+xyzt_string +' '+xyzp_string
+	ret_string_vec.append(fstr)
+    return ret_string_vec
+
 def piz_mc_info(infile):
     #Returns a large string of of MC truth info which is specific and useful for pi0s
     f = ROOT.TFile("{}".format(infile))
