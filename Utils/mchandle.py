@@ -51,8 +51,8 @@ def mc_roi( f):
     for a in range(len(pi0_itr)):
         N_pi0 = str(len(pi0_itr))
 	ID_pi0 = str(a)
-	xyzt_string = str(_x_particle[a])+' ' +str(_y_particle[a])+' '+str(_z_particle[a])+' '+str(_t_particle[a])
-	xyzp_string = str(_px_particle[a])+' ' +str(_py_particle[a])+' '+str(_pz_particle[a])+' '+str(_pp_particle[a])
+	xyzt_string = str(_x_particle[pi0_itr[a]])+' ' +str(_y_particle[pi0_itr[a]])+' '+str(_z_particle[pi0_itr[a]])+' '+str(_t_particle[pi0_itr[a]])
+	xyzp_string = str(_px_particle[pi0_itr[a]])+' ' +str(_py_particle[pi0_itr[a]])+' '+str(_pz_particle[pi0_itr[a]])+' '+str(_pp_particle[pi0_itr[a]])
  	fstr = N_pi0+' ' + ID_pi0+' '+xyzt_string +' '+xyzp_string
 	ret_string_vec.append(fstr)
     return ret_string_vec
