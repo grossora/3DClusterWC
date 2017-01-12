@@ -1,5 +1,6 @@
 import numpy as np
 import ROOT
+import mchandle as mh
 
 
 #Need to define detector volumes
@@ -31,6 +32,31 @@ def F_Info(f):
 	GoodBad = False
 	return GoodBad, ers 
     return GoodBad , ers
+
+def F_Info_Cosmic(f):
+    print f
+    dirnum = f.rsplit('/')[-2]
+    event = f.rsplit('/')[-1].split('.')[0].rsplit('_')[-1] 
+    GoodBad = True
+    de = str(dirnum)+'_'+str(event)
+    # The file
+    fi = ROOT.TFile("{}".format(f))
+    #### Check if file is zomobie
+    if fi.IsZombie():
+        print 'We have a Zombie!'
+        fline =[ -1 for x in range(18)] ### Fix to what ever the number is
+        rfline = de+' '+ str(fline).split('[')[1].rsplit(']')[0].replace(',','')+ '\n'
+	GoodBad = False
+	return GoodBad, de 
+    rt= fi.Get("T_rec_charge")
+    if rt.GetEntries()==0:
+        print 'AHHHH Got nothing...'
+        fline =[ -2 for x in range(18)] ### Fix to what ever the number is
+        rfline = de+' '+ str(fline).split('[')[1].rsplit(']')[0].replace(',','')+ '\n'
+	GoodBad = False
+	return GoodBad, de 
+    return GoodBad , de
+
 
 def ROI_Info(ers):
     roi_file = open('ROI_Visual.txt','r')
@@ -77,7 +103,29 @@ def Make_Fig(dataset,datasetidx_holder,labels,dpath,plt_title ):
     plt.clf()
     return
 
-    
+ 
+def Make_nipi_Fig(dataset,datasetidx_holder,labels,dpath,plt_title, f  ):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    cl_idx_v = [item for sublist in datasetidx_holder for item in sublist]
+    for i in cl_idx_v: #This loop over just the return/passed clusters
+        if labels[i] == -1:
+            continue
+        ax.scatter(dataset[i][2], dataset[i][0], dataset[i][1], c=colors[labels[i]], marker=markers[labels[i]])
+
+    # Fill out the PI0 Star position
+    pi0_vtx = mh.n_induce_pi0_vtx(f)
+    ax.scatter(pi0_vtx[2], pi0_vtx[0], pi0_vtx[1], marker='H',c='black',s=300)
+    ax.set_xlabel(' Z ')
+    ax.set_ylabel(' X ')
+    ax.set_zlabel(' Y ')
+    ax.set_title(plt_title)
+    path = dpath+ '/'+plt_title+'.png'
+    plt.savefig(path)
+    plt.clf()
+    return
+
+   
 
 def Rebase_Dataset_Keep_Clustered(dataset, holder):
     # This will keep only the ojects that are  already clustered and rebase the dataset to just points that are in whatever holder_set comes in 
