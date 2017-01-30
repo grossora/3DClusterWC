@@ -1,10 +1,5 @@
-from sklearn.cluster import KMeans , MeanShift
 import numpy as np
-from operator import itemgetter
-from scipy.spatial import distance
-from scipy.spatial import ConvexHull
-import SParams.axisfit as axfi
-import math as math
+from operator import itemgetter # This should be removed... but it's not too heavy.
 
 ####
 # Clusters only return a labels list
@@ -54,12 +49,6 @@ def walker(inup, dist, mincluster):
                 idxlist[lab] = idxcounter
             idxcounter +=1
     return idxlist
-
-
-def walker_2(inup, dist, mincluster):
-    idxlist = [-1 for x in range(len(inup))]
-    return idxlist
-
 #====================================================================================================================================
 #====================================================================================================================================
 #====================================================================================================================================
