@@ -1,8 +1,12 @@
 import numpy as np 
+from sklearn.decomposition import PCA
 
 
-def locallin(dataset, datasetidx_holder, min_clustersize, k_radius  ):
-    print 'start of local lin'
+
+def locallin(dataset, datasetidx_holder, min_clustersize, k_radius, rep_level, min_mean_err  ):
+#def locallin(dataset, datasetidx_holder, min_clustersize, k_radius  ):
+#    print 'start of local lin'
+    k_radius_sq = k_radius*k_radius
     track_holder = []
     shower_holder = []
     #bring in the object 
@@ -15,7 +19,7 @@ def locallin(dataset, datasetidx_holder, min_clustersize, k_radius  ):
         if len(points)<min_clustersize:
             # Push this to the showers holder
             shower_holder.append(a)
-            print 'bailing because of min cluster size'
+#            print 'bailing because of min cluster size'
             continue
 
         region_fit = []
@@ -27,8 +31,9 @@ def locallin(dataset, datasetidx_holder, min_clustersize, k_radius  ):
                 pb = points[pt_b]
                 #pa = [ points[pt_a][0],points[pt_a][1],points[pt_a][2]]
                 #pb = [ points[pt_b][0],points[pt_b][1],points[pt_b][2]]
-                test_dist = distance.euclidean(pa,pb)
-                if test_dist<k_radius:
+                test_dist_sq = (pa[0]-pb[0])*(pa[0]-pb[0])+(pa[1]-pb[1])*(pa[1]-pb[1])+(pa[2]-pb[2])*(pa[2]-pb[2])
+                #test_dist = distance.euclidean(pa,pb)
+                if test_dist_sq<k_radius:
                     # Keep this point to fit to
                     region_pts.append(pb)
 
@@ -48,8 +53,8 @@ def locallin(dataset, datasetidx_holder, min_clustersize, k_radius  ):
 
             #if not pca_var== -999:
             if not pca_var== -999 and not np.isnan(pca_var):
-                print 'filling region fit'
-                print pca_var
+                #print 'filling region fit'
+                #print pca_var
                 region_fit.append(pca_var)
 
         # Now we have the fit values for all points in the cluster
@@ -60,6 +65,8 @@ def locallin(dataset, datasetidx_holder, min_clustersize, k_radius  ):
         # Shower are difuse so there stray points will not have neighbors around them and will not get put into the fit
 
         represetation_conf = 1.0*len(region_fit)/len(points)
+	if represetation_conf ==0.0:	
+	    continue
 
         # Need to figure out a few ways to decided if it's track like 
 
@@ -79,14 +86,14 @@ def locallin(dataset, datasetidx_holder, min_clustersize, k_radius  ):
         represetation_all_noout_conf = 1.0*len(region_fit_no_outlier)/len(points)
 
         ##### Print out some things just to see what is going on 
-        print '\n ######################################################'
-        print '####### Print out some info #############################'
-        print 'This is the len of points ', str(len(points))
-        print 'This is the represetnation _conf ', str(represetation_conf)
-        print 'This is the len of no outlier ', str(len(region_fit_no_outlier))
-        print 'This is the mean of the region', str(np.mean(region_fit))
-        print 'This is the len of region_fit ', str(len(region_fit))
-        print '###################################################### \n '
+#        print '\n ######################################################'
+#        print '####### Print out some info #############################'
+#        print 'This is the len of points ', str(len(points))
+#        print 'This is the represetnation _conf ', str(represetation_conf)
+#        print 'This is the len of no outlier ', str(len(region_fit_no_outlier))
+#        print 'This is the mean of the region', str(np.mean(region_fit))
+#        print 'This is the len of region_fit ', str(len(region_fit))
+#        print '###################################################### \n '
 
 
         ################################################
@@ -94,12 +101,11 @@ def locallin(dataset, datasetidx_holder, min_clustersize, k_radius  ):
         # make some decisions about tracklike or shower
         ################################################
         ################################################
-        if np.mean(region_fit) > 0.8 and represetation_conf>0.9 :
+        if np.mean(region_fit) > min_mean_err and represetation_conf>rep_level :
             # ^^^ This is just a guess 
             track_holder.append(a)
         else:
             shower_holder.append(a)
 
     return shower_holder, track_holder
-
 
