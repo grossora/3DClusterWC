@@ -1,6 +1,331 @@
 import math as math
 import ROOT
 
+xlo = 0
+xhi = 256
+ylo = -116
+yhi = 116
+zlo = 0
+zhi = 1056
+
+
+def mc_neutron_induced_contained(f):
+    tf = ROOT.TFile("{}".format(f))
+    tree = tf.Get("TMC")
+
+    # Files to be run since we only want to do certain  
+    Signal_event = []
+#    id_counter = 0
+
+    _x_particle = []
+    _y_particle = []
+    _z_particle = []
+    _Ex_particle = []
+    _Ey_particle = []
+    _Ez_particle = []
+    _pp_particle = []
+    pi0_4mom = []
+    daughter_4mom = []
+
+    for i in tree:
+
+        id_list = [x for x in i.mc_id]
+        mother_list = [ x for x in i.mc_mother]
+        pdg_list = [ x for x in i.mc_pdg]
+        Sxyzt_list = [[x] for x in i.mc_startXYZT]
+        Exyzt_list = [[x] for x in i.mc_endXYZT]
+        Sxyzp_list = [[x] for x in i.mc_startMomentum]
+        process_list = [ x for x in i.mc_process]
+        # Sort out the xyztlist
+
+        for itr in range(len(Sxyzt_list)):
+            modu = itr%4
+            if modu ==0:
+                _x_particle.append(str(Sxyzt_list[itr]).split('[')[1].split(']')[0])
+                _Ex_particle.append(str(Exyzt_list[itr]).split('[')[1].split(']')[0])
+            if modu ==1:
+                _y_particle.append(str(Sxyzt_list[itr]).split('[')[1].split(']')[0])
+                _Ey_particle.append(str(Exyzt_list[itr]).split('[')[1].split(']')[0])
+            if modu ==2:
+                _z_particle.append(str(Sxyzt_list[itr]).split('[')[1].split(']')[0])
+                _Ez_particle.append(str(Exyzt_list[itr]).split('[')[1].split(']')[0])
+            if modu ==3:
+                _pp_particle.append(str(Sxyzp_list[itr]).split('[')[1].split(']')[0])
+
+        pi0_mothers=[]
+        pi0_partid=[]
+        for pdg in range(len(pdg_list)):
+            if pdg_list[pdg]==111:
+                #is the pi0 is not inside the TPC
+                if float(_x_particle[pdg])<xlo or float(_x_particle[pdg])>xhi or float(_y_particle[pdg])<ylo or float(_y_particle[pdg])>yhi or float(_z_particle[pdg])<zlo or float(_z_particle[pdg])>zhi:
+                    print' pi0 is outside '
+                    continue
+                pi0_id = id_list[pdg]
+                pi0_4mom.append(float(_x_particle[pdg]))
+                pi0_4mom.append(float(_y_particle[pdg]))
+                pi0_4mom.append(float(_z_particle[pdg]))
+                pi0_4mom.append(float(_pp_particle[pdg]))
+                motherindex = id_list.index(mother_list[pdg])
+                pi0_mothers.append(pdg_list[id_list.index(mother_list[pdg])])
+                pi0_partid.append(pi0_id)
+
+        # If there is not only one pi0 in the TPC continue
+        if len(pi0_mothers)!=1 or len(pi0_mothers)==0:
+            return False 
+
+        # If the pi0 mom is not a neutron
+        if pi0_mothers[0]!=2112:# is this a neutron? 
+            return False
+
+
+        for pdg in range(len(pdg_list)):
+            if pdg_list[pdg]==22 or pdg_list[pdg]==-11 or pdg_list[pdg]==11:
+                if mother_list[pdg]==0:
+                    continue
+                try:
+                    mom = pdg_list[id_list.index(mother_list[pdg])]
+                    if mom==111:
+                        if pi0_partid[0] != mother_list[pdg]:
+                            continue
+                        print ' this is the mother index list' , pi0_partid[0]
+                        print ' this is the id current list ' , str(mother_list[pdg])
+                        if float(_Ex_particle[pdg])<xlo or float(_Ex_particle[pdg])>xhi or float(_Ey_particle[pdg])<ylo or float(_Ey_particle[pdg])>yhi or float(_Ez_particle[pdg])<zlo or float(_Ez_particle[pdg])>zhi:
+                            print ' this is a bad daughter'
+			    return False 
+                except:
+                    continue
+
+    print 'From the MC Filter We are returning True'
+    return True
+
+
+
+
+
+
+
+def mc_neutron_induced_OBJ( f ):
+    tf = ROOT.TFile("{}".format(f))
+    tree = tf.Get("TMC")
+
+    # Files to be run since we only want to do certain  
+    Signal_event = []
+
+    _x_particle = []
+    _y_particle = []
+    _z_particle = []
+    _Ex_particle = []
+    _Ey_particle = []
+    _Ez_particle = []
+    _pp_particle = []
+    pi0_4mom = []
+    daughter_4mom = []
+
+    for i in tree:
+
+        id_list = [x for x in i.mc_id]
+        mother_list = [ x for x in i.mc_mother]
+        pdg_list = [ x for x in i.mc_pdg]
+        Sxyzt_list = [[x] for x in i.mc_startXYZT]
+        Exyzt_list = [[x] for x in i.mc_endXYZT]
+        Sxyzp_list = [[x] for x in i.mc_startMomentum]
+        process_list = [ x for x in i.mc_process]
+        # Sort out the xyztlist
+
+        for itr in range(len(Sxyzt_list)):
+            modu = itr%4
+            if modu ==0:
+                _x_particle.append(str(Sxyzt_list[itr]).split('[')[1].split(']')[0])
+                _Ex_particle.append(str(Exyzt_list[itr]).split('[')[1].split(']')[0])
+            if modu ==1:
+                _y_particle.append(str(Sxyzt_list[itr]).split('[')[1].split(']')[0])
+                _Ey_particle.append(str(Exyzt_list[itr]).split('[')[1].split(']')[0])
+            if modu ==2:
+                _z_particle.append(str(Sxyzt_list[itr]).split('[')[1].split(']')[0])
+                _Ez_particle.append(str(Exyzt_list[itr]).split('[')[1].split(']')[0])
+            if modu ==3:
+                _pp_particle.append(str(Sxyzp_list[itr]).split('[')[1].split(']')[0])
+
+        pi0_mothers=[]
+        pi0_partid=[]
+        for pdg in range(len(pdg_list)):
+            if pdg_list[pdg]==111:
+                #is the pi0 is not inside the TPC
+                if float(_x_particle[pdg])<xlo or float(_x_particle[pdg])>xhi or float(_y_particle[pdg])<ylo or float(_y_particle[pdg])>yhi or float(_z_particle[pdg])<zlo or float(_z_particle[pdg])>zhi:
+                    print' pi0 is outside '
+		    print _x_particle[pdg]
+		    print _y_particle[pdg]
+		    print _z_particle[pdg]	
+                    continue
+                pi0_id = id_list[pdg]
+                pi0_4mom.append(float(_x_particle[pdg]))
+                pi0_4mom.append(float(_y_particle[pdg]))
+                pi0_4mom.append(float(_z_particle[pdg]))
+                pi0_4mom.append(float(_pp_particle[pdg]))
+                motherindex = id_list.index(mother_list[pdg])
+                pi0_mothers.append(pdg_list[id_list.index(mother_list[pdg])])
+                pi0_partid.append(pi0_id)
+
+        # If there is not only one pi0 in the TPC continue
+        if len(pi0_mothers)!=1:
+            return False 
+
+        # If the pi0 mom is not a neutron
+        if pi0_mothers[0]!=2112:# is this a neutron? 
+            return False
+
+
+        for pdg in range(len(pdg_list)):
+            if pdg_list[pdg]==22 or pdg_list[pdg]==-11 or pdg_list[pdg]==11:
+                if mother_list[pdg]==0:
+                    continue
+                try:
+                    mom = pdg_list[id_list.index(mother_list[pdg])]
+                    if mom==111:
+                        if pi0_partid[0] != mother_list[pdg]:
+                            continue
+                        print ' this is the mother index list' , pi0_partid[0]
+                        print ' this is the id current list ' , str(mother_list[pdg])
+                        if float(_Ex_particle[pdg])<xlo or float(_Ex_particle[pdg])>xhi or float(_Ey_particle[pdg])<ylo or float(_Ey_particle[pdg])>yhi or float(_Ez_particle[pdg])<zlo or float(_Ez_particle[pdg])>zhi:
+			    continue
+                        tdaughter_4mom = []
+                        tdaughter_4mom.append(float(_Ex_particle[pdg]))
+                        tdaughter_4mom.append(float(_Ey_particle[pdg]))
+                        tdaughter_4mom.append(float(_Ez_particle[pdg]))
+                        tdaughter_4mom.append(float(_pp_particle[pdg]))
+                        daughter_4mom.append(tdaughter_4mom)
+                except:
+                    continue
+
+    print 'From the MC Filter We are returning True'
+    return pi0_4mom, daughter_4mom
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def oldmc_neutron_induced_OBJ( f ):
+    tf = ROOT.TFile("{}".format(f))
+    mctree = tf.Get("TMC")
+    _x_particle = []
+    _y_particle = []
+    _z_particle = []
+    _Ex_particle = []
+    _Ey_particle = []
+    _Ez_particle = []
+    _pp_particle = []
+    pi0_4mom = []
+    daughter_4mom = []
+
+    for i in mctree:
+        id_list = [x for x in i.mc_id]
+        mother_list = [ x for x in i.mc_mother]
+        pdg_list = [ x for x in i.mc_pdg]
+        Sxyzt_list = [[x] for x in i.mc_startXYZT]
+        Exyzt_list = [[x] for x in i.mc_endXYZT]
+        Sxyzp_list = [[x] for x in i.mc_startMomentum]
+
+        # Sort out the xyztlist
+        for itr in range(len(Sxyzt_list)):
+            modu = itr%4
+            if modu ==0:
+                _x_particle.append(str(Sxyzt_list[itr]).split('[')[1].split(']')[0])
+                _Ex_particle.append(str(Exyzt_list[itr]).split('[')[1].split(']')[0])
+            if modu ==1:
+                _y_particle.append(str(Sxyzt_list[itr]).split('[')[1].split(']')[0])
+                _Ey_particle.append(str(Exyzt_list[itr]).split('[')[1].split(']')[0])
+            if modu ==2:
+                _z_particle.append(str(Sxyzt_list[itr]).split('[')[1].split(']')[0])
+                _Ez_particle.append(str(Exyzt_list[itr]).split('[')[1].split(']')[0])
+            if modu ==3:
+                _pp_particle.append(str(Sxyzp_list[itr]).split('[')[1].split(']')[0])
+
+        pi0_id = -1
+        # ^^ This is a little hacked
+        # This should be unique for neutron photon
+        for pdg in range(len(pdg_list)):
+            if pdg_list[pdg]==111:
+                pi0_id = id_list[pdg]
+                pi0_4mom.append(float(_x_particle[pdg]))
+                pi0_4mom.append(float(_y_particle[pdg]))
+                pi0_4mom.append(float(_z_particle[pdg]))
+                pi0_4mom.append(float(_pp_particle[pdg]))
+
+        for pdg in range(len(pdg_list)):
+            if pdg_list[pdg]==22 or pdg_list[pdg]==-11 or pdg_list[pdg]==11:
+                if mother_list[pdg]==0:
+                    continue
+                try:
+                    mom = pdg_list[id_list.index(mother_list[pdg])]
+                    if mom==111:
+                        tdaughter_4mom = []
+                        tdaughter_4mom.append(float(_Ex_particle[pdg]))
+                        tdaughter_4mom.append(float(_Ey_particle[pdg]))
+                        tdaughter_4mom.append(float(_Ez_particle[pdg]))
+                        tdaughter_4mom.append(float(_pp_particle[pdg]))
+                        daughter_4mom.append(tdaughter_4mom)
+                except:
+                    continue
+
+    return pi0_4mom, daughter_4mom
+
+
+
+
+def mc_Obj_points(obj_list):
+    print obj_list
+    pi0_xyz = obj_list[0]
+    gamma_xyz = obj_list[1]
+
+    # The first entry in the list is a 4 position of the pi0
+    space = 20*20*20 +  20* 3*len(gamma_xyz)
+    dataset = [None for x in range(space)]
+    #dataset = []
+    mclab = 0 # This is hard code magic for coloring in the bee viewer
+    box_size = 1
+    density = 5
+    # lower number is higher density
+    # Fix this later on# lower number is higher density
+
+
+    counter=0
+    for i in range(0,box_size*100,density):
+        for j in range(0,box_size*100,density):
+	    for k in range(0,box_size*100,density):
+		dataset[counter] = [pi0_xyz[0]-box_size +2.*box_size*k/100.,pi0_xyz[1]-box_size+2.*box_size*j/100.,pi0_xyz[2]-box_size+2.*box_size*i/100.]
+		counter+=1
+		#dataset.append([pi0_xyz[0]-box_size +2.*box_size*k/100.,pi0_xyz[1]-box_size+2.*box_size*j/100.,pi0_xyz[2]-box_size+2.*box_size*i/100.])
+
+    # Draw a cross for the photons
+    for a in range(len(gamma_xyz)):
+        for i in range(0,box_size*100,density):
+	    dataset[counter] = [gamma_xyz[a][0]-box_size +2.*box_size*i/100.,gamma_xyz[a][1],gamma_xyz[a][2]]# wali the X
+	    counter+=1
+	    dataset[counter] = [gamma_xyz[a][0],gamma_xyz[a][1]-box_size +2.*box_size*i/100.,gamma_xyz[a][2]]# wali the X
+	    counter+=1
+	    dataset[counter] = [gamma_xyz[a][0],gamma_xyz[a][1],gamma_xyz[a][2]-box_size +2.*box_size*i/100.]# wali the X
+	    counter+=1
+
+    # Draw a line between the pi0vtx and daughters
+
+    # We are going to fill out a box around the region
+    labels = [0 for a in range(len(dataset))]
+    return dataset , labels
+    
+    
+
 
 def mc_roi( f):
     tf = ROOT.TFile("{}".format(f))
@@ -115,6 +440,8 @@ def piz_mc_info(infile):
 	ret = str(dalitz)+' '+str(vtx_pi_x)+' '+str(vtx_pi_y)+' '+str(vtx_pi_z)+' '+str(p_pi_x)+' '+str(p_pi_y)+' '+str(p_pi_z)+' '+str(p_pi_mag)+' '+str(vtx_gamma_x)+' '+str(vtx_gamma_y)+' '+str(vtx_gamma_z)+' '+str(p_gamma_x)+' '+str(p_gamma_y)+' '+str(p_gamma_z)+' '+str(p_gamma_mag)+' '+str(vtx_gamma_2_x)+' '+str(vtx_gamma_2_y)+' '+str(vtx_gamma_2_z)+' '+str(p_gamma_2_x)+' '+str(p_gamma_2_y)+' '+str(p_gamma_2_z)+' '+str(p_gamma_2_mag)+' '+str(gamma_angle) + ' '+ str(1-math.cos(gamma_angle))
 	
 	return ret 
+
+	
 
 
 def gamma_mc_info(infile):

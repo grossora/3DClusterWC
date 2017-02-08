@@ -57,6 +57,174 @@ def F_Info_Cosmic(f):
 	return GoodBad, de 
     return GoodBad , de
 
+def MakeJsonMC(f,jpath,jcount,reco_label,mc_dl):
+    dataset = ConvertWCMC(f)
+    mlabels = mc_dl[1]
+    data = [[0 for x in range(5)] for y in range(len(mlabels)+len(dataset))]
+
+    for i in range(len(dataset)):
+        data[i][0] = dataset[i][0]
+        data[i][1] = dataset[i][1]
+        data[i][2] = dataset[i][2]
+        data[i][3] = dataset[i][3] 
+        data[i][4] = 1
+
+    for i in range(len(mlabels)):
+	idx = i + len(dataset)
+        data[idx][0] = mc_dl[0][i][0]
+        data[idx][1] = mc_dl[0][i][1]
+        data[idx][2] = mc_dl[0][i][2]
+        data[idx][3] = 0.0 
+        data[idx][4] = 1
+
+    output_x = ["%.1f" % data[k][0] for k in range(len(data))]
+    new_output_x = '[%s]' % ','.join(map(str,output_x))
+    output_y = ["%.1f" % data[k][1] for k in range(len(data))]
+    new_output_y = '[%s]' % ','.join(map(str,output_y))
+    output_z = ["%.1f" % data[k][2] for k in range(len(data))]
+    new_output_z = '[%s]' % ','.join(map(str,output_z))
+    output_q = ["%.1f" % data[k][3] for k in range(len(data))]
+    new_output_q = '[%s]' % ','.join(map(str,output_q))
+    output_nq = ["%.1f" % data[k][4] for k in range(len(data))]
+    new_output_nq = '[%s]' % ','.join(map(str,output_nq))
+    l = "{ \"x\":%s, \"y\":%s, \"z\":%s, \"q\":%s, \"nq\":%s, \"type\":\"truth\", \"runNo\":\"1\", \"subRunNo\":\"1\", \"eventNo\":\"1\", \"geom\":\"uboone\" }" % (new_output_x,new_output_y,new_output_z,new_output_q,new_output_nq)
+    # open a text file     
+    #lookup = open('{}/{}-reco.json'.format(jpath,str(jcount)),'w')
+    lookup = open('{}/{}-{}.json'.format(jpath,str(jcount),reco_label),'a+')
+    lookup.writelines(l)
+    lookup.close()
+    return
+
+def MakeJsonReco(f,jpath,jcount,reco_label,mc_dl):
+    dataset = ConvertWC_InTPC(f)
+    mlabels = mc_dl[1]
+    data = [[0 for x in range(5)] for y in range(len(mlabels)+len(dataset))]
+
+    for i in range(len(dataset)):
+        data[i][0] = dataset[i][0]
+        data[i][1] = dataset[i][1]
+        data[i][2] = dataset[i][2]
+        data[i][3] = dataset[i][3] 
+        data[i][4] = 1
+
+    for i in range(len(mlabels)):
+	idx = i + len(dataset)
+        data[idx][0] = mc_dl[0][i][0]
+        data[idx][1] = mc_dl[0][i][1]
+        data[idx][2] = mc_dl[0][i][2]
+        data[idx][3] = 0.0 
+        data[idx][4] = 1
+
+    output_x = ["%.1f" % data[k][0] for k in range(len(data))]
+    new_output_x = '[%s]' % ','.join(map(str,output_x))
+    output_y = ["%.1f" % data[k][1] for k in range(len(data))]
+    new_output_y = '[%s]' % ','.join(map(str,output_y))
+    output_z = ["%.1f" % data[k][2] for k in range(len(data))]
+    new_output_z = '[%s]' % ','.join(map(str,output_z))
+    output_q = ["%.1f" % data[k][3] for k in range(len(data))]
+    new_output_q = '[%s]' % ','.join(map(str,output_q))
+    output_nq = ["%.1f" % data[k][4] for k in range(len(data))]
+    new_output_nq = '[%s]' % ','.join(map(str,output_nq))
+    l = "{ \"x\":%s, \"y\":%s, \"z\":%s, \"q\":%s, \"nq\":%s, \"type\":\"truth\", \"runNo\":\"1\", \"subRunNo\":\"1\", \"eventNo\":\"1\", \"geom\":\"uboone\" }" % (new_output_x,new_output_y,new_output_z,new_output_q,new_output_nq)
+    # open a text file     
+    #lookup = open('{}/{}-reco.json'.format(jpath,str(jcount)),'w')
+    lookup = open('{}/{}-{}.json'.format(jpath,str(jcount),reco_label),'a+')
+    lookup.writelines(l)
+    lookup.close()
+    return
+	
+
+def MakeJson(dataset,labels,jpath,jcount,reco_label,mc_dl):
+    mlabels = mc_dl[1]
+    data = [[0 for x in range(5)] for y in range(len(mlabels)+len(labels))]
+
+    for i in range(len(labels)):
+        data[i][0] = dataset[i][0]
+        data[i][1] = dataset[i][1]
+        data[i][2] = dataset[i][2]
+        if labels[i] == -1:
+            data[i][3] = 0.
+        else:
+            data[i][3] = float((labels[i] % 7 )+2) *5000.
+        data[i][4] = 1
+
+    for i in range(len(mlabels)):
+	idx = i + len(labels)
+        data[idx][0] = mc_dl[0][i][0]
+        data[idx][1] = mc_dl[0][i][1]
+        data[idx][2] = mc_dl[0][i][2]
+        data[idx][3] = float(1) *5000.
+        data[idx][4] = 1
+	
+
+
+    output_x = ["%.1f" % data[k][0] for k in range(len(data))]
+    new_output_x = '[%s]' % ','.join(map(str,output_x))
+    output_y = ["%.1f" % data[k][1] for k in range(len(data))]
+    new_output_y = '[%s]' % ','.join(map(str,output_y))
+    output_z = ["%.1f" % data[k][2] for k in range(len(data))]
+    new_output_z = '[%s]' % ','.join(map(str,output_z))
+    output_q = ["%.1f" % data[k][3] for k in range(len(data))]
+    new_output_q = '[%s]' % ','.join(map(str,output_q))
+    output_nq = ["%.1f" % data[k][4] for k in range(len(data))]
+    new_output_nq = '[%s]' % ','.join(map(str,output_nq))
+    l = "{ \"x\":%s, \"y\":%s, \"z\":%s, \"q\":%s, \"nq\":%s, \"type\":\"truth\", \"runNo\":\"1\", \"subRunNo\":\"1\", \"eventNo\":\"1\", \"geom\":\"uboone\" }" % (new_output_x,new_output_y,new_output_z,new_output_q,new_output_nq)
+    # open a text file     
+    #lookup = open('{}/{}-reco.json'.format(jpath,str(jcount)),'w')
+    lookup = open('{}/{}-{}.json'.format(jpath,str(jcount),reco_label),'a+')
+    lookup.writelines(l)
+    lookup.close()
+    return
+
+
+def MakeJson_Objects(dataset,datasetidx_holder,labels,jpath,jcount,reco_label,mc_dl):
+#def MakeJson_Objects(f,dataset,datasetidx_holder,labels,jpath,jcount,reco_label):
+    mlabels = mc_dl[1]
+    data = [[0 for x in range(5)] for y in range(len(mlabels)+len(labels))]
+
+    for a in datasetidx_holder:
+	for i in a:
+            if labels[i] == -1:
+                continue
+            data[i][3] = float((labels[i] % 7 )+2) *5000.
+            data[i][0] = dataset[i][0]
+            data[i][1] = dataset[i][1]
+            data[i][2] = dataset[i][2]
+            data[i][4] = 1
+
+    for i in range(len(mlabels)):
+	idx = i + len(labels)
+        data[idx][0] = mc_dl[0][i][0]
+        data[idx][1] = mc_dl[0][i][1]
+        data[idx][2] = mc_dl[0][i][2]
+        data[idx][3] = float(1) *5000.
+        data[idx][4] = 1
+	
+
+    output_x = ["%.1f" % data[k][0] for k in range(len(data))]
+    new_output_x = '[%s]' % ','.join(map(str,output_x))
+    output_y = ["%.1f" % data[k][1] for k in range(len(data))]
+    new_output_y = '[%s]' % ','.join(map(str,output_y))
+    output_z = ["%.1f" % data[k][2] for k in range(len(data))]
+    new_output_z = '[%s]' % ','.join(map(str,output_z))
+    output_q = ["%.1f" % data[k][3] for k in range(len(data))]
+    new_output_q = '[%s]' % ','.join(map(str,output_q))
+    output_nq = ["%.1f" % data[k][4] for k in range(len(data))]
+    new_output_nq = '[%s]' % ','.join(map(str,output_nq))
+    l = "{ \"x\":%s, \"y\":%s, \"z\":%s, \"q\":%s, \"nq\":%s, \"type\":\"truth\", \"runNo\":\"1\", \"subRunNo\":\"1\", \"eventNo\":\"1\", \"geom\":\"uboone\" }" % (new_output_x,new_output_y,new_output_z,new_output_q,new_output_nq)
+    # open a text file     
+    #lookup = open('{}/{}-reco.json'.format(jpath,str(jcount)),'w')
+    lookup = open('{}/{}-{}.json'.format(jpath,str(jcount),reco_label),'a+')
+    lookup.writelines(l)
+    lookup.close()
+    return
+
+
+
+
+
+
+
 
 def ROI_Info(ers):
     roi_file = open('ROI_Visual.txt','r')
@@ -265,4 +433,38 @@ def ConvertWC_points(infile):
     spta = np.asanyarray(sptarray)
     return spta
 
+def Get_Total_MC_Charge(infile):
+    f = ROOT.TFile("{}".format(infile))
+    t = f.Get("T_true")
+    # Parse into an array  
+    tot_q = 0.0
+    for entry in t:
+	tot_q +=entry.q
+    return tot_q
+   
+def Get_Total_Reco_Charge(infile):
+    f = ROOT.TFile("{}".format(infile))
+    t = f.Get("T_rec_charge")
+    # Parse into an array  
+    tot_q = 0.0
+    for entry in t:
+	tot_q +=entry.q
+    return tot_q
+
+def Get_Total_Thresh_Charge(infile,Thresh):
+    f = ROOT.TFile("{}".format(infile))
+    t = f.Get("T_rec_charge")
+    # Parse into an array  
+    tot_q = 0.0
+    for entry in t:
+	if entry.q>Thresh:
+	    tot_q +=entry.q
+    return tot_q
+
+def Get_Total_Object_Charge(dataset,datasetidx_holder):
+    tot_q = 0.0
+    for c in datasetidx_holder:
+	for i in c:
+	    tot_q +=dataset[i][3]
+    return tot_q
 
