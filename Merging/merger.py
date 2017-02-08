@@ -2,6 +2,8 @@ import numpy as np
 import collections as col
 import Geo_Utils.axisfit as axfi
 from sklearn.decomposition import PCA
+from scipy.spatial import ConvexHull
+
 
 
 xDetL = 256.
@@ -34,8 +36,7 @@ def sqdist_ptline_to_point(pt_a,pt_b,pt_t):
 ###########################################################################################
 
 
-def make_extend_lines_list(dataset , idxlist_for_tracks,labels):
-#def make_extend_lines_list(dataset , idxlist_for_tracks):
+def make_extend_lines_list(dataset , idxlist_for_tracks,labels,min_clust_length):
     # loop over all the 'track' points 
     # take the pca for direction 
     # extend the direction past the top and bottom in y 
@@ -49,6 +50,21 @@ def make_extend_lines_list(dataset , idxlist_for_tracks,labels):
         for p in t:
             pt = [ dataset[p][0],dataset[p][1],dataset[p][2] ]
             points.append(pt)
+
+        #Try to make a hull 
+        try:
+            hull = ConvexHull(points)
+        except:
+            continue
+        min_bd = hull.min_bound
+        max_bd = hull.max_bound
+        # distance using NP 
+        clust_length = np.linalg.norm(min_bd-max_bd)
+        if clust_length<min_clust_length:
+            print ' look how small a cluster ' , str(clust_length)
+            continue
+
+
         # This PCA Should always converge since we have done it already 
 	# There should be a Try in here
         pca = PCA(n_components=3)

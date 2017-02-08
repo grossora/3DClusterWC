@@ -3,7 +3,9 @@ import Geo_Utils.axisfit as axfi
 from scipy.spatial import ConvexHull
 
 
-def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,pdelta):
+
+def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,pdelta,min_clust_length):
+#def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,pdelta):
     # Clean Stitch 
     gap_dist_sq  = gap_dist*gap_dist
     k_radius_sq  = k_radius*k_radius 
@@ -14,21 +16,35 @@ def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,pdelt
     # ^^^^^^ Will be of the form [    [datasetidx_holder INDEX, the vertices of the hull, total_charge] ]
     for a in range(len(datasetidx_holder)):
         points_v = []
-        tot_q = 0.0
+#        tot_q = 0.0
         for i in datasetidx_holder[a]:
             if labels[i]==-1:
                 break
             pt = [ dataset[i][0],dataset[i][1],dataset[i][2]]
             points_v.append(pt)
-            tot_q+= dataset[i][3]
+            #tot_q+= dataset[i][3]
         #Try to make a hull 
         try:
             hull = ConvexHull(points_v)
         except:
             continue
+
+	# Check if it is past the min_length
+	min_bd = hull.min_bound
+	max_bd = hull.max_bound
+	# distance using NP 
+	clust_length = np.linalg.norm(min_bd-max_bd)
+	if clust_length<min_clust_length:
+	    print ' look how small a cluster ' , str(clust_length)
+	    continue
+	
+	print 'this is cluster length' , str(clust_length)
+
+	
         # Now we have the hull
         ds_hull_idx = [datasetidx_holder[a][i] for i in list(hull.vertices)] # Remeber use the true idx
-        chq = [a,ds_hull_idx,tot_q]
+        chq = [a,ds_hull_idx]
+        #chq = [a,ds_hull_idx,tot_q]
         CHQ_vec.append(chq)
 
     clust_merge_plex = [] # Pairs of local clusters that need to be merged There are from the id from the datasetidx_holder labels
@@ -91,7 +107,6 @@ def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,pdelt
                 if k_dist_sq<k_radius_sq:
                     local_pts_idx_b.append(i)
             # Find the PCA
-            #local_PCA_a = [-999]  ##### This is a typo
             local_PCA_b = [-999]
             local_PCA_dir_b = [-999]
             try:
@@ -120,10 +135,6 @@ def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,pdelt
             deltaAB_minus_sq = (projA_minus[0] - vtx_B[0])*(projA_minus[0] - vtx_B[0]) + (projA_minus[1] - vtx_B[1])*(projA_minus[1] - vtx_B[1])+(projA_minus[2] - vtx_B[2])*(projA_minus[2] - vtx_B[2])
             deltaBA_plus_sq = (projB_plus[0] - vtx_A[0])*(projB_plus[0] - vtx_A[0]) + (projB_plus[1] - vtx_A[1])*(projB_plus[1] - vtx_A[1])+(projB_plus[2] - vtx_A[2])*(projB_plus[2] - vtx_A[2])
             deltaBA_minus_sq = (projB_minus[0] - vtx_A[0])*(projB_minus[0] - vtx_A[0]) + (projB_minus[1] - vtx_A[1])*(projB_minus[1] - vtx_A[1])+(projB_minus[2] - vtx_A[2])*(projB_minus[2] - vtx_A[2])
-            #deltaAB_plus = distance.euclidean(projA_plus,vtx_B)
-            #deltaAB_minus = distance.euclidean(projA_minus,vtx_B)
-            #deltaBA_plus = distance.euclidean(projB_plus,vtx_A)
-            #deltaBA_minus = distance.euclidean(projB_minus,vtx_A)
 
 	    # Do the comparison
             AB = False
@@ -170,12 +181,15 @@ def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,pdelt
         # This gets the label value for the cluster
         labels_label = labels[cluster_idx_positions[0]]
 
+#----------------------------------------------------------
         # loop over all of the PA;
-        for p in pa:
+        #for p in pa:
+        for p in range(1,len(pa)):
             # p is the clusterlabel
-            cidx = datasetidx_holder[p]
+            cidx = datasetidx_holder[pa[p]]
             for i in cidx:
                 labels[i] = labels_label
+#----------------------------------------------------------
     # Return here? 
     # Currently this is only working of the labels end of things... .the new dataset is not addresed yet
     # I just  need the labels at the moment .... and this is a fucking mess.... 
