@@ -1,6 +1,7 @@
 import sys, os
 import Utils.datahandle as dh
 import Clustering.protocluster as pc
+import Clustering.postcluster as postc
 import Utils.labelhanle as lh
 import Merging.stitcher as st
 import Merging.merger as mr 
@@ -21,21 +22,21 @@ debug = True
 #make_jsons = False 
 make_jsons = True 
 Charge_thresh = 3000 # Need to be set better This is used to mask over low charge spacepoints when bringing them into the Dataset
-#Charge_thresh = 4000 # Need to be set better This is used to mask over low charge spacepoints when bringing them into the Dataset
-#Charge_thresh = 5000 # Need to be set better This is used to mask over low charge spacepoints when bringing them into the Dataset
 method_name = 'test'
-#method_name = 'test_ts'
-#method_name = 'test_4000_d4_m25_ST_l50_r20_d10'
 drun_dir = method_name
+
+
+First_pass_time = []
+First_pass_time = []
 
 #######################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #######################################
 
 jcount = 0 
-start = datetime.now()
 
 for f in sys.argv[1:]:
+    start = datetime.now()
     ########################
     # Check if the File is good
     ########################
@@ -47,7 +48,18 @@ for f in sys.argv[1:]:
     ########################
     if debug:
         print 'Current Event -->  Event Run SubRun : ',file_info[1]
-    
+
+
+    ########################
+    # Is this a Signal Event 
+    ########################
+    SigEVT =  mh.mc_neutron_induced_contained(f)
+    print ' Is this a signal'
+    print SigEVT
+    if not SigEVT:
+	continue
+
+
     ########################
     # mc_datalabel info
     # Call this once and get the mc info for the jsons for later
@@ -62,6 +74,26 @@ for f in sys.argv[1:]:
         continue
 
     ########################
+    # make the data dir for json 
+    ########################
+    jdir = os.getcwd() + '/Bjson/'+drun_dir+ '/'+str(jcount)   # This still is global and can be used later
+    if make_jsons:
+        if not os.path.isdir(jdir):
+            print 'NO DIR.... making one for you'
+            os.makedirs(jdir)
+
+    ########################
+    # Print out all the MC Spacepts 
+    ########################
+    if make_jsons:
+        dh.MakeJsonMC(f,jdir,jcount,'AlgMC',mc_dl)
+
+    if make_jsons:
+        dh.MakeJsonReco(f,jdir,jcount,'AlgSPT',mc_dl)
+
+
+
+    ########################
     #Bring in  Dataset 
     ########################
     dataset = dh.ConvertWC_InTPC_thresh('{}'.format(f),Charge_thresh)
@@ -73,103 +105,126 @@ for f in sys.argv[1:]:
     labels = pc.walker(dataset,4,25) # Runs clustering and returns labels list 
     datasetidx_holder = lh.label_to_idxholder(labels,25) # Converts the labels list into a list of indexvalues for datasets  [ [ list of index], [list of indexes].. [] ]  
 
-    ########################
-    # make the data dir for json 
-    ########################
-    jdir = os.getcwd() + '/Bjson/'+drun_dir+ '/'+str(jcount)   # This still is global and can be used later
-    if make_jsons:
-        if not os.path.isdir(jdir):
-            print 'NO DIR.... making one for you'
-            os.makedirs(jdir)
- 
+
     if make_jsons:
 	dh.MakeJson(dataset,labels,jdir,jcount,'Alg1_first_pass',mc_dl)
-	#dh.MakeJson(f,dataset,labels,jdir,jcount,'Alg1_first_pass')
 
-
-    # Pick up here with cluister stictch algos
     #######################
     #  Stitch track like clusters
     #######################
-    d, labels = st.Track_Stitcher_epts(dataset,datasetidx_holder,labels,50,20,10)
-    #d, labels = st.Track_Stitcher_epts(dataset,datasetidx_holder,labels,50,10,5)
+    d, labels = st.Track_Stitcher_epts(dataset,datasetidx_holder,labels,30,20,10,20 )
+    # STICH :  dataset,datasetidx_holder,labels,gap_dist,k_radius,pdelta,min_clust_length
+    datasetidx_holder = lh.label_to_idxholder(labels,10) # Converts the labels list into a list of indexvalues for datasets  [ [ list of index], [list of indexes].. [] ]  
  
     if make_jsons:
 	dh.MakeJson(dataset,labels,jdir,jcount,'Alg2_stitch',mc_dl)
-	#dh.MakeJson(f,dataset,labels,jdir,jcount,'Alg2_stitch')
 
-    datasetidx_holder = lh.label_to_idxholder(labels,10) # Converts the labels list into a list of indexvalues for datasets  [ [ list of index], [list of indexes].. [] ]  
     if make_jsons:
 	dh.MakeJson_Objects(dataset,datasetidx_holder,labels,jdir,jcount,'Alg2_stitch_obj',mc_dl)
 
-
     # Sort out the tracks
-    ell = mr.make_extend_lines_list(dataset,datasetidx_holder,labels)
-    labels = mr.TrackExtend_sweep(dataset,labels,ell, 10)
+    ell = mr.make_extend_lines_list(dataset,datasetidx_holder,labels, 20)
+    labels = mr.TrackExtend_sweep(dataset,labels,ell,10)
     datasetidx_holder = lh.label_to_idxholder(labels,10) # Converts the labels list into a list of indexvalues for datasets  [ [ list of index], [list of indexes].. [] ]  
  
     if make_jsons:
 	dh.MakeJson_Objects(dataset,datasetidx_holder,labels,jdir,jcount,'Alg3_sweep_obj', mc_dl)
-	#dh.MakeJson_Objects(f,dataset,datasetidx_holder,labels,jdir,jcount,'Alg3_sweep_obj')
+
     # Try to loop over again
-
-    ell = mr.make_extend_lines_list(dataset,datasetidx_holder,labels)
-    labels = mr.TrackExtend_sweep(dataset,labels,ell, 10)
-    datasetidx_holder = lh.label_to_idxholder(labels,10) # Converts the labels list into a list of indexvalues for datasets  [ [ list of index], [list of indexes].. [] ]  
-
-    if make_jsons:
-	dh.MakeJson_Objects(dataset,datasetidx_holder,labels,jdir,jcount,'Alg4_sweep_obj',mc_dl)
-	#dh.MakeJson_Objects(f,dataset,datasetidx_holder,labels,jdir,jcount,'Alg3_sweep_obj')
-
-    d, labels = st.Track_Stitcher_epts(dataset,datasetidx_holder,labels,20,20,2)
-    #d, labels = st.Track_Stitcher_epts(dataset,datasetidx_holder,labels,20,20,10)
+    d, labels = st.Track_Stitcher_epts(dataset,datasetidx_holder,labels,20,20,2,10)
+    # STICH :  dataset,datasetidx_holder,labels,gap_dist,k_radius,pdelta,min_clust_length
     #labels = st.hull_touch(dataset,datasetidx_holder,labels,2)
     datasetidx_holder = lh.label_to_idxholder(labels,10) # Converts the labels list into a list of indexvalues for datasets  [ [ list of index], [list of indexes].. [] ]  
    
     if make_jsons:
-	dh.MakeJson_Objects(dataset,datasetidx_holder,labels,jdir,jcount,'Alg5_stitch_obj', mc_dl)
-	#dh.MakeJson_Objects(f,dataset,datasetidx_holder,labels,jdir,jcount,'Alg5_stitch_obj')
-
-    # Sort out the tracks
-    ell = mr.make_extend_lines_list(dataset,datasetidx_holder,labels)
-    labels = mr.TrackExtend_sweep(dataset,labels,ell, 10)
-    datasetidx_holder = lh.label_to_idxholder(labels,10) # Converts the labels list into a list of indexvalues for datasets  [ [ list of index], [list of indexes].. [] ]  
-    
-    if make_jsons:
-	dh.MakeJson(dataset,labels,jdir,jcount,'Alg6_sweep',mc_dl)
-	#dh.MakeJson(f,dataset,labels,jdir,jcount,'Alg6_sweep')
-	dh.MakeJson_Objects(dataset,datasetidx_holder,labels,jdir,jcount,'Alg6_sweep_obj',mc_dl)
-	#dh.MakeJson_Objects(f,dataset,datasetidx_holder,labels,jdir,jcount,'Alg6_sweep_obj')
-
+	dh.MakeJson_Objects(dataset,datasetidx_holder,labels,jdir,jcount,'Alg4_stitch_obj', mc_dl)
 
     ###########################
     # track Shower Seperation 
-    ###########################
+    ###########################lg3_sweep_obj
 
-    showeridx_holder, trackidx_holder  =tss.clusterspread(dataset,datasetidx_holder,0.90,50)
-
+    showeridx_holder, trackidx_holder  =tss.clusterspread(dataset,datasetidx_holder,500,50)
+    #showeridx_holder, trackidx_holder  =tss.clusterspread(dataset,datasetidx_holder,1000,50)
+    #showeridx_holder, trackidx_holder  =tss.clusterspread(dataset,datasetidx_holder,0.98,50)
 
     if make_jsons:
 	dh.MakeJson_Objects(dataset,showeridx_holder,labels,jdir,jcount,'Shower_obj',mc_dl)
-	#dh.MakeJson_Objects(f,dataset,showeridx_holder,labels,jdir,jcount,'Shower_obj')
 	dh.MakeJson_Objects(dataset,trackidx_holder,labels,jdir,jcount,'Track_obj',mc_dl)
-	#dh.MakeJson_Objects(f,dataset,trackidx_holder,labels,jdir,jcount,'Track_obj',mc_dl)
 
 
     llshoweridx_holder, lltrackidx_holder  =cts.locallin(dataset,showeridx_holder,50,6,.88,0.93)
     #llshoweridx_holder, lltrackidx_holder  =cts.locallin(dataset,showeridx_holder,50,6)
 
     if make_jsons:
-	#dh.MakeJson_Objects(f,dataset,llshoweridx_holder,labels,jdir,jcount,'llShower_obj')
-	#dh.MakeJson_Objects(f,dataset,trackidx_holder+lltrackidx_holder,labels,jdir,jcount,'llTrack_obj')
 	dh.MakeJson_Objects(dataset,llshoweridx_holder,labels,jdir,jcount,'llShower_obj',mc_dl)
 	dh.MakeJson_Objects(dataset,trackidx_holder+lltrackidx_holder,labels,jdir,jcount,'llTrack_obj',mc_dl)
 
 
+    # Look at post clustering for things
+    labels = postc.cluster_volumes_keep(dataset,labels,ell,5)
+    #labels = postc.cluster_volumes(dataset,ell,3)
+    datasetidx_holder = lh.label_to_idxholder(labels,10) # Converts the labels list into a list of indexvalues for datasets  [ [ list of index], [list of indexes].. [] ]  
+
+    print ' looking at things that just goit clustered after the post step '
+    print ' size of dataset ', str(len(dataset))
+    print ' size of unclustered ' , str(labels.count(-1))
+
+    if make_jsons:
+	dh.MakeJson(dataset,labels,jdir,jcount,'RePass_Alg1',mc_dl)
+
+    d, labels = st.Track_Stitcher_epts(dataset,datasetidx_holder,labels,50,20,10,20 )
+    datasetidx_holder = lh.label_to_idxholder(labels,10) # Converts the labels list into a list of indexvalues for datasets  [ [ list of index], [list of indexes].. [] ]  
+
+    if make_jsons:
+	dh.MakeJson_Objects(dataset,datasetidx_holder,labels,jdir,jcount,'repass_alg2_stitch',mc_dl)
+
+
+    ######################### Try SOMETHING WITH MORE POINTS###############
+
+
+    ###########################
+    # track Shower Seperation 
+    ###########################
+
+    showeridx_holder, trackidx_holder  =tss.clusterspread(dataset,datasetidx_holder,500,50)
+
+    llshoweridx_holder, lltrackidx_holder  =cts.locallin(dataset,showeridx_holder,50,6,.88,0.93)
+    if make_jsons:
+	dh.MakeJson_Objects(dataset,llshoweridx_holder,labels,jdir,jcount,'Repass_Shower_obj',mc_dl)
+	dh.MakeJson_Objects(dataset,trackidx_holder+lltrackidx_holder,labels,jdir,jcount,'Repass_Track_obj',mc_dl)
+
+
+
+    '''
+
+    full_dataset = dh.ConvertWC_InTPC_thresh('{}'.format(f),0.0)
+    print 'Size of full_dataset', str(len(full_dataset))
+    labels = postc.cluster_volumes(full_dataset,ell,10)
+    #labels = postc.cluster_volumes(full_dataset,ell,3)
+    datasetidx_holder = lh.label_to_idxholder(labels,10) # Converts the labels list into a list of indexvalues for datasets  [ [ list of index], [list of indexes].. [] ]  
+
+    print ' size of unclustered ' , str(labels.count(-1))
+
+    if make_jsons:
+	dh.MakeJson(full_dataset,labels,jdir,jcount,'Full_RePass_Alg1',mc_dl)
+
+    d, labels = st.Track_Stitcher_epts(full_dataset,datasetidx_holder,labels,50,20,10,20 )
+    datasetidx_holder = lh.label_to_idxholder(labels,10) # Converts the labels list into a list of indexvalues for datasets  [ [ list of index], [list of indexes].. [] ]  
+ 
+    if make_jsons:
+	dh.MakeJson_Objects(full_dataset,datasetidx_holder,labels,jdir,jcount,'Full_Repass_alg2_stitch',mc_dl)
+
+    '''
+ 
+ 
+
+
+
+
     jcount +=1
 
-end = datetime.now()
-delta = end-start
-print 'time for an event :'
-print delta.seconds
+    end = datetime.now()
+    delta = end-start
+    print 'time for an event :'
+    print delta.seconds
 
