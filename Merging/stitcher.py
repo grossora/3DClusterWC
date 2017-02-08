@@ -4,12 +4,13 @@ from scipy.spatial import ConvexHull
 
 
 
-def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,pdelta,min_clust_length):
+def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,min_pdelta,pangle_uncert,min_clust_length):
+#def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,pangle_uncert,min_clust_length):
+#def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,pdelta,min_clust_length):
 #def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,pdelta):
     # Clean Stitch 
     gap_dist_sq  = gap_dist*gap_dist
     k_radius_sq  = k_radius*k_radius 
-    pdelta_sq  = pdelta*pdelta 
     #k_radius = radius for points around the hulls minimal dist point 
     #pdelta = minimal distance allowed from the projection 
     CHQ_vec = []
@@ -27,6 +28,9 @@ def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,pdelt
         try:
             hull = ConvexHull(points_v)
         except:
+	    
+	    print ' AHHHHHHHHHH couldnt make hull'
+	    print ' length of the points cluster' , str(len(points_v))
             continue
 
 	# Check if it is past the min_length
@@ -96,6 +100,7 @@ def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,pdelt
                 local_PCA_dir_a = axfi.PCAParams_dir(dataset,local_pts_idx_a,3)
             except:
                 local_PCA_a = [-999]
+		print ' AHHHHHHHHHH AAAA Bad PCA'
                 continue
 
             #Find second PCA 
@@ -114,6 +119,7 @@ def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,pdelt
                 local_PCA_dir_b = axfi.PCAParams_dir(dataset,local_pts_idx_b,3)
             except:
                 local_PCA_b = [-999]
+		print ' AHHHHHHHHHH BBBB Bad PCA'
                 continue
 
 
@@ -122,7 +128,12 @@ def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,pdelt
             # Get the points 
             vtx_A =  np.asarray([dataset[vp_idx_a][0],dataset[vp_idx_a][1],dataset[vp_idx_a][2]])
             vtx_B =  np.asarray([dataset[vp_idx_b][0],dataset[vp_idx_b][1],dataset[vp_idx_b][2]])
-            Length_between_vtx = pow( pow((vtx_A[0] - vtx_B[0]),2) + pow((vtx_A[1] - vtx_B[1]),2)+ pow((vtx_A[2] - vtx_B[2]),2) ,0,5) # This is slow
+            Length_between_vtx = pow( pow((vtx_A[0] - vtx_B[0]),2) + pow((vtx_A[1] - vtx_B[1]),2)+ pow((vtx_A[2] - vtx_B[2]),2) ,0.5) # This is slow
+            #Length_between_vtx = pow( pow((vtx_A[0] - vtx_B[0]),2) + pow((vtx_A[1] - vtx_B[1]),2)+ pow((vtx_A[2] - vtx_B[2]),2) ,0,5) # This is slow
+	    # ^^^ This is the gap
+            #print ' Length between vtx'
+	    #print Length_between_vtx	
+
             #Length_between_vtx = distance.euclidean(vtx_A,vtx_B)
 
             projA_plus = vtx_A + np.asarray([1,1,1])*Length_between_vtx * np.asarray(local_PCA_dir_a[0])
@@ -135,6 +146,13 @@ def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,pdelt
             deltaAB_minus_sq = (projA_minus[0] - vtx_B[0])*(projA_minus[0] - vtx_B[0]) + (projA_minus[1] - vtx_B[1])*(projA_minus[1] - vtx_B[1])+(projA_minus[2] - vtx_B[2])*(projA_minus[2] - vtx_B[2])
             deltaBA_plus_sq = (projB_plus[0] - vtx_A[0])*(projB_plus[0] - vtx_A[0]) + (projB_plus[1] - vtx_A[1])*(projB_plus[1] - vtx_A[1])+(projB_plus[2] - vtx_A[2])*(projB_plus[2] - vtx_A[2])
             deltaBA_minus_sq = (projB_minus[0] - vtx_A[0])*(projB_minus[0] - vtx_A[0]) + (projB_minus[1] - vtx_A[1])*(projB_minus[1] - vtx_A[1])+(projB_minus[2] - vtx_A[2])*(projB_minus[2] - vtx_A[2])
+
+	
+            # Assume this should work for small angles make pdelta depended on the gap and a fixed angle uncertanty
+	    # I would try 5 degree... 0.087 rads 
+	    # Use B ~ theta(rads)*Gap
+            pdelta = min_pdelta+pangle_uncert*Length_between_vtx 
+            pdelta_sq  = pdelta*pdelta 
 
 	    # Do the comparison
             AB = False
