@@ -105,6 +105,14 @@ def locallin(dataset, datasetidx_holder, min_clustersize, k_radius, rep_level, m
             # ^^^ This is just a guess 
             track_holder.append(a)
         else:
+            print '\n ######################################################'
+            print '####### Print out some info #############################'
+            print 'This is the len of points ', str(len(points))
+            print 'This is the represetnation _conf ', str(represetation_conf)
+            print 'This is the len of no outlier ', str(len(region_fit_no_outlier))
+            print 'This is the mean of the region', str(np.mean(region_fit))
+            print 'This is the len of region_fit ', str(len(region_fit))
+	    print '###################################################### \n '
             shower_holder.append(a)
 
     return shower_holder, track_holder

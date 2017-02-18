@@ -1,5 +1,5 @@
 import numpy as np
-import axisfit as af
+import Geo_Utils.axisfit as af
 import math as math
 from operator import itemgetter
 

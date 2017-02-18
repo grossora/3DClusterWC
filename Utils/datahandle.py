@@ -58,17 +58,24 @@ def F_Info_Cosmic(f):
     return GoodBad , de
 
 def MakeJsonMC(f,jpath,jcount,reco_label,mc_dl):
+
+    # Bring in the MC set of Space points
     dataset = ConvertWCMC(f)
+
+    #MC Labels special for Pi0
     mlabels = mc_dl[1]
+    #Make data list of list to fit the length of the dataset and the mc objects
     data = [[0 for x in range(5)] for y in range(len(mlabels)+len(dataset))]
 
+    # Loop throught the set of spacepoints and fill out the datalist
     for i in range(len(dataset)):
-        data[i][0] = dataset[i][0]
-        data[i][1] = dataset[i][1]
-        data[i][2] = dataset[i][2]
-        data[i][3] = dataset[i][3] 
+        data[i][0] = dataset[i][0]   # X position
+        data[i][1] = dataset[i][1]   # Y position
+        data[i][2] = dataset[i][2]   # Z position
+        data[i][3] = dataset[i][3]   # Charge 
         data[i][4] = 1
 
+    # Loop throught spacepoints that will be used for makeing MCObject markers
     for i in range(len(mlabels)):
 	idx = i + len(dataset)
         data[idx][0] = mc_dl[0][i][0]
@@ -77,6 +84,7 @@ def MakeJsonMC(f,jpath,jcount,reco_label,mc_dl):
         data[idx][3] = 0.0 
         data[idx][4] = 1
 
+    #prep things to fill out 
     output_x = ["%.1f" % data[k][0] for k in range(len(data))]
     new_output_x = '[%s]' % ','.join(map(str,output_x))
     output_y = ["%.1f" % data[k][1] for k in range(len(data))]
@@ -87,12 +95,16 @@ def MakeJsonMC(f,jpath,jcount,reco_label,mc_dl):
     new_output_q = '[%s]' % ','.join(map(str,output_q))
     output_nq = ["%.1f" % data[k][4] for k in range(len(data))]
     new_output_nq = '[%s]' % ','.join(map(str,output_nq))
+
+    # Write out the line for the BeeStructure
     l = "{ \"x\":%s, \"y\":%s, \"z\":%s, \"q\":%s, \"nq\":%s, \"type\":\"truth\", \"runNo\":\"1\", \"subRunNo\":\"1\", \"eventNo\":\"1\", \"geom\":\"uboone\" }" % (new_output_x,new_output_y,new_output_z,new_output_q,new_output_nq)
+
     # open a text file     
-    #lookup = open('{}/{}-reco.json'.format(jpath,str(jcount)),'w')
     lookup = open('{}/{}-{}.json'.format(jpath,str(jcount),reco_label),'a+')
     lookup.writelines(l)
     lookup.close()
+
+
     return
 
 def MakeJsonReco(f,jpath,jcount,reco_label,mc_dl):
@@ -157,7 +169,6 @@ def MakeJson(dataset,labels,jpath,jcount,reco_label,mc_dl):
         data[idx][4] = 1
 	
 
-
     output_x = ["%.1f" % data[k][0] for k in range(len(data))]
     new_output_x = '[%s]' % ','.join(map(str,output_x))
     output_y = ["%.1f" % data[k][1] for k in range(len(data))]
@@ -168,17 +179,19 @@ def MakeJson(dataset,labels,jpath,jcount,reco_label,mc_dl):
     new_output_q = '[%s]' % ','.join(map(str,output_q))
     output_nq = ["%.1f" % data[k][4] for k in range(len(data))]
     new_output_nq = '[%s]' % ','.join(map(str,output_nq))
+
+    # Write out the line for the BeeStructure
     l = "{ \"x\":%s, \"y\":%s, \"z\":%s, \"q\":%s, \"nq\":%s, \"type\":\"truth\", \"runNo\":\"1\", \"subRunNo\":\"1\", \"eventNo\":\"1\", \"geom\":\"uboone\" }" % (new_output_x,new_output_y,new_output_z,new_output_q,new_output_nq)
+    
     # open a text file     
-    #lookup = open('{}/{}-reco.json'.format(jpath,str(jcount)),'w')
     lookup = open('{}/{}-{}.json'.format(jpath,str(jcount),reco_label),'a+')
+    # Write the Jsonline 
     lookup.writelines(l)
     lookup.close()
     return
 
 
 def MakeJson_Objects(dataset,datasetidx_holder,labels,jpath,jcount,reco_label,mc_dl):
-#def MakeJson_Objects(f,dataset,datasetidx_holder,labels,jpath,jcount,reco_label):
     mlabels = mc_dl[1]
     data = [[0 for x in range(5)] for y in range(len(mlabels)+len(labels))]
 
@@ -186,7 +199,8 @@ def MakeJson_Objects(dataset,datasetidx_holder,labels,jpath,jcount,reco_label,mc
 	for i in a:
             if labels[i] == -1:
                 continue
-            data[i][3] = float((labels[i] % 7 )+2) *5000.
+            data[i][3] = (10*(labels[i] %20)/22.+2) *5000.
+            #data[i][3] = float((labels[i] % 7 )+2) *5000.
             data[i][0] = dataset[i][0]
             data[i][1] = dataset[i][1]
             data[i][2] = dataset[i][2]
