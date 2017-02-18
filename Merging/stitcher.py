@@ -39,10 +39,10 @@ def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,min_p
 	# distance using NP 
 	clust_length = np.linalg.norm(min_bd-max_bd)
 	if clust_length<min_clust_length:
-	    print ' look how small a cluster ' , str(clust_length)
+	    #print ' look how small a cluster ' , str(clust_length)
 	    continue
 	
-	print 'this is cluster length' , str(clust_length)
+	#print 'this is cluster length' , str(clust_length)
 
 	
         # Now we have the hull

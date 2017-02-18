@@ -61,7 +61,7 @@ def make_extend_lines_list(dataset , idxlist_for_tracks,labels,min_clust_length)
         # distance using NP 
         clust_length = np.linalg.norm(min_bd-max_bd)
         if clust_length<min_clust_length:
-            print ' look how small a cluster ' , str(clust_length)
+            #print ' look how small a cluster ' , str(clust_length)
             continue
 
 
@@ -85,12 +85,27 @@ def make_extend_lines_list(dataset , idxlist_for_tracks,labels,min_clust_length)
 
 
 ###########################################################################################
-def TrackExtend_sweep(dataset, labels, extended_lines_list, doca):
+def TrackExtend_sweep(dataset, labels, extended_lines_list, doca, labelcase=-1):
+#def TrackExtend_sweep(dataset, labels, extended_lines_list, doca, unlabel=True):
+# unlabel = True ==> Use only points that are  only unlabled
+# unlabel = True clust= False ==> Use all points that are clust clusteread
+# unlabel = False ==> Use all points
+
+#Case -1: Use only points that are  only unlabled
+#Case 0: Use All points 
+#Case 1: Use only clustered points 
+
+#def TrackExtend_sweep(dataset, labels, extended_lines_list, doca):
     # 
     doca_sq = doca*doca
     for i in range(len(dataset)):
-	if labels[i]!= -1:
-	    continue
+	if labelcase==-1:
+	    if labels[i]!= -1 :
+	        continue
+	if labelcase== 1:
+	    if labels[i]== -1 :
+		continue
+
     # Points are list
         for t in extended_lines_list:
             pt_to_line_dist_sq = sqdist_ptline_to_point(t[1],t[2],[dataset[i][0],dataset[i][1],dataset[i][2]])
@@ -101,7 +116,36 @@ def TrackExtend_sweep(dataset, labels, extended_lines_list, doca):
     return labels
     
 		
-	 
+def TrackExtend_sweep_ShowerLabels(dataset, labels, extended_lines_list, doca, labelcase=-1):
+#def TrackExtend_sweep(dataset, labels, extended_lines_list, doca, unlabel=True):
+# unlabel = True ==> Use only points that are  only unlabled
+# unlabel = True clust= False ==> Use all points that are clust clusteread
+# unlabel = False ==> Use all points
+
+#Case -1: Use only points that are  only unlabled
+#Case 0: Use All points 
+#Case 1: Use only clustered points 
+
+#def TrackExtend_sweep(dataset, labels, extended_lines_list, doca):
+    # 
+    doca_sq = doca*doca
+    for i in range(len(dataset)):
+	if labelcase==-1:
+	    if labels[i]!= -1 :
+	        continue
+	if labelcase== 1:
+	    if labels[i]== -1 :
+		continue
+
+    # Points are list
+        for t in extended_lines_list:
+            pt_to_line_dist_sq = sqdist_ptline_to_point(t[1],t[2],[dataset[i][0],dataset[i][1],dataset[i][2]])
+	    if pt_to_line_dist_sq<doca_sq:
+		# Add this shit to the cluster
+	        labels[i]=-1
+		break 
+    return labels
+  
 	
 	
     
