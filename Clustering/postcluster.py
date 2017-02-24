@@ -4,6 +4,54 @@ import numpy as np
 #from scipy.spatial import ConvexHull
 #import SParams.axisfit as axfi
 import math as math
+import Merging.merger as mr
+
+
+
+
+
+def cluster_volumes(dataset,tracks_epts,min_doca):
+    #tracks_epts [ [label,top_pt,bottom_pt]...] 
+    min_doca_sq = min_doca*min_doca
+
+    labels = [-1 for x in range(len(dataset))]
+
+    # Loop over dataset entirly Don't worry about what was previously clustered
+    for i in range(len(dataset)):
+	# Check for minimum distance between pt and volumes
+	lowest_sqdist = 100000 # Hardcoded max
+	v_label = -999
+	for line in range(len(tracks_epts)):
+	    sq_dist = mr.sqdist_ptline_to_point(tracks_epts[line][1],tracks_epts[line][2],[dataset[i][0],dataset[i][1],dataset[i][2]])
+	    if sq_dist<lowest_sqdist and sq_dist<min_doca_sq:
+	    #if sq_dist<lowest_sqdist:
+	        lowest_sqdist=sq_dist
+		v_label = line 
+	    
+	if v_label!=-999:
+	    labels[i] = v_label
+    return labels
+
+def cluster_volumes_keep(dataset,labels,tracks_epts,min_doca):
+    #tracks_epts [ [label,top_pt,bottom_pt]...] 
+    min_doca_sq = min_doca*min_doca
+
+    # Loop over dataset entirly Don't worry about what was previously clustered
+    for i in range(len(dataset)):
+	# Check for minimum distance between pt and volumes
+	lowest_sqdist = 100000 # Hardcoded max
+	v_label = -999
+	for line in range(len(tracks_epts)):
+	    sq_dist = mr.sqdist_ptline_to_point(tracks_epts[line][1],tracks_epts[line][2],[dataset[i][0],dataset[i][1],dataset[i][2]])
+	    if sq_dist<lowest_sqdist and sq_dist<min_doca_sq:
+	    #if sq_dist<lowest_sqdist:
+	        lowest_sqdist=sq_dist
+		v_label = tracks_epts[line][0]
+	    
+	if v_label!=-999:
+	    labels[i] = v_label
+    return labels
+
 
 
 

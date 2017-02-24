@@ -2,11 +2,11 @@ import math as math
 import ROOT
 
 xlo = 0
-xhi = 256
-ylo = -116
-yhi = 116
+xhi = 256.35
+ylo = -116.9
+yhi = 116.9
 zlo = 0
-zhi = 1056
+zhi = 1036.8
 
 
 def mc_neutron_induced_contained(f):
@@ -87,15 +87,12 @@ def mc_neutron_induced_contained(f):
                     if mom==111:
                         if pi0_partid[0] != mother_list[pdg]:
                             continue
-                        print ' this is the mother index list' , pi0_partid[0]
-                        print ' this is the id current list ' , str(mother_list[pdg])
                         if float(_Ex_particle[pdg])<xlo or float(_Ex_particle[pdg])>xhi or float(_Ey_particle[pdg])<ylo or float(_Ey_particle[pdg])>yhi or float(_Ez_particle[pdg])<zlo or float(_Ez_particle[pdg])>zhi:
                             print ' this is a bad daughter'
 			    return False 
                 except:
                     continue
 
-    print 'From the MC Filter We are returning True'
     return True
 
 
@@ -152,17 +149,35 @@ def mc_neutron_induced_OBJ( f ):
             if pdg_list[pdg]==111:
                 #is the pi0 is not inside the TPC
                 if float(_x_particle[pdg])<xlo or float(_x_particle[pdg])>xhi or float(_y_particle[pdg])<ylo or float(_y_particle[pdg])>yhi or float(_z_particle[pdg])<zlo or float(_z_particle[pdg])>zhi:
-                    print' pi0 is outside '
-		    print _x_particle[pdg]
-		    print _y_particle[pdg]
-		    print _z_particle[pdg]	
+                    #print' pi0 is outside '
+		    #print _x_particle[pdg]
+		    #print _y_particle[pdg]
+		    #print _z_particle[pdg]	
                     continue
                 pi0_id = id_list[pdg]
                 pi0_4mom.append(float(_x_particle[pdg]))
                 pi0_4mom.append(float(_y_particle[pdg]))
                 pi0_4mom.append(float(_z_particle[pdg]))
                 pi0_4mom.append(float(_pp_particle[pdg]))
-                motherindex = id_list.index(mother_list[pdg])
+		try:
+                    motherindex = id_list.index(mother_list[pdg])
+		except ValueError:
+                    for pdg in range(len(pdg_list)):
+            	        if pdg_list[pdg]==22 or pdg_list[pdg]==-11 or pdg_list[pdg]==11:
+                            try:
+                    	        mom = pdg_list[id_list.index(mother_list[pdg])]
+                                if mom!=111:
+				    continue
+			    except :
+				continue
+		            tdaughter_4mom = []
+                            tdaughter_4mom.append(float(_Ex_particle[pdg]))
+                            tdaughter_4mom.append(float(_Ey_particle[pdg]))
+                            tdaughter_4mom.append(float(_Ez_particle[pdg]))
+                            tdaughter_4mom.append(float(_pp_particle[pdg]))
+                            daughter_4mom.append(tdaughter_4mom)
+		    return pi0_4mom, daughter_4mom
+		
                 pi0_mothers.append(pdg_list[id_list.index(mother_list[pdg])])
                 pi0_partid.append(pi0_id)
 
@@ -184,8 +199,8 @@ def mc_neutron_induced_OBJ( f ):
                     if mom==111:
                         if pi0_partid[0] != mother_list[pdg]:
                             continue
-                        print ' this is the mother index list' , pi0_partid[0]
-                        print ' this is the id current list ' , str(mother_list[pdg])
+                        #print ' this is the mother index list' , pi0_partid[0]
+                        #print ' this is the id current list ' , str(mother_list[pdg])
                         if float(_Ex_particle[pdg])<xlo or float(_Ex_particle[pdg])>xhi or float(_Ey_particle[pdg])<ylo or float(_Ey_particle[pdg])>yhi or float(_Ez_particle[pdg])<zlo or float(_Ez_particle[pdg])>zhi:
 			    continue
                         tdaughter_4mom = []
@@ -285,7 +300,7 @@ def oldmc_neutron_induced_OBJ( f ):
 
 
 def mc_Obj_points(obj_list):
-    print obj_list
+    #print obj_list
     pi0_xyz = obj_list[0]
     gamma_xyz = obj_list[1]
 
