@@ -20,8 +20,8 @@ from datetime import datetime
 #######################################
 #Global Calls
 debug = True
-make_jsons = False
-#make_jsons = True
+#make_jsons = False
+make_jsons = True
 #Charge_thresh = 100000 # Need to be set better This is used to mask over low charge spacepoints when bringing them into the Dataset
 Charge_thresh = 4000 # Need to be set better This is used to mask over low charge spacepoints when bringing them into the Dataset
 method_name = 'test'
@@ -53,13 +53,11 @@ for f in sys.argv[1:]:
     ########################
     # Is this a Signal Event  AKA One neutron induced pi0
     ########################
-    ''' 
     SigEVT =  mh.mc_neutron_induced_contained(f)
     print ' Is this a signal'
     if not SigEVT:
 	continue
     print '^^^^ this is signal '
-    ''' 
 
     ########################
     # mc_datalabel info
