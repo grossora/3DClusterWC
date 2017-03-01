@@ -12,16 +12,11 @@ import Utils.mchandle as mh
 import Geo_Utils.axisfit as axfi
 import SParams.selpizero as selpz
 
-
-
-
-
-
+from datetime import datetime
 
 def Reco_Shower_HolderLabels( dataset, mc_dl , jdir, jcount , make_jsons=True):
     # This will take in a dataset and file information
     # Returns a rebased dataset, clustered index holder for showers, labels :  with candidate shower events 
-
 
     ########################
     # cluster the event into something 
@@ -135,5 +130,126 @@ def Reco_Shower_HolderLabels( dataset, mc_dl , jdir, jcount , make_jsons=True):
     # These are the remaining shower like clusters
     return rebase_dataset, rebase_showeridx_holder, rebase_labels 
     
+#################################################################################
+#################################################################################
+#################################################################################
 
+def Reco_trackshower( dataset, mc_dl , jdir, jcount , make_jsons=True,timer=False):
+#def Reco_trackshower( dataset, mc_dl , jdir, jcount , make_jsons=True):
+    # This will take in a dataset and file information
+    # Returns a rebased dataset, clustered index holder for showers, labels :  with candidate shower events 
+    ########################
+    # cluster the event into something 
+    ########################
+    time_v = []  #  Walker, js, Stitch, js, cluster_sep, 2js, extend, 2js, stray, js
+    start = datetime.now()
 
+    labels = pc.walker(dataset,4,25) # Runs clustering and returns labels list 
+    datasetidx_holder = lh.label_to_idxholder(labels,25) # Converts the labels list into a list of indexvalues for datasets  [ [ list of index], [list of indexes].. [] ]  
+    if timer:
+	tdelta = datetime.now() - start 
+	time_v.append(tdelta.seconds)
+        start = datetime.now()
+    
+    ########################
+    # Make Jsons
+    ########################
+    if make_jsons:
+        dh.MakeJson(dataset,labels,jdir,jcount,'Alg1_first_pass',mc_dl)
+    if timer:
+	tdelta = datetime.now() - start 
+	time_v.append(tdelta.seconds)
+        start = datetime.now()
+
+    #######################
+    #  Stitch track like clusters
+    #######################
+    d, labels = st.Track_Stitcher_epts(dataset,datasetidx_holder,labels,100,20,2.0,0.16,10 )
+    # STICH :  dataset,datasetidx_holder,labels,gap_dist,k_radius,min_pdelta, angle_error,min_clust_length
+    datasetidx_holder = lh.label_to_idxholder(labels,25) # Converts the labels list into a list of indexvalues for datasets  [ [ list of index], [list of indexes].. [] ]  
+    if timer:
+	tdelta = datetime.now() - start 
+	time_v.append(tdelta.seconds)
+        start = datetime.now()
+
+    ########################
+    # Make Jsons
+    ########################
+    if make_jsons:
+        dh.MakeJson_Objects(dataset,datasetidx_holder,labels,jdir,jcount,'Alg2_stitch_obj', mc_dl)
+    if timer:
+	tdelta = datetime.now() - start 
+	time_v.append(tdelta.seconds)
+        start = datetime.now()
+
+    ###########################
+    # track Shower Seperation 
+    # based on length 
+    ###########################
+    showeridx_holder, trackidx_holder  =tss.clusterlength_sep(dataset,datasetidx_holder,50)
+    #showeridx_holder, trackidx_holder  =tss.clusterspread(dataset,datasetidx_holder,5000,50)
+    if timer:
+	tdelta = datetime.now() - start 
+	time_v.append(tdelta.seconds)
+        start = datetime.now()
+ 
+    ########################
+    # Make Jsons
+    ########################
+    if make_jsons:
+        dh.MakeJson_Objects(dataset,showeridx_holder,labels,jdir,jcount,'Shower_len_obj',mc_dl)
+        dh.MakeJson_Objects(dataset,trackidx_holder,labels,jdir,jcount,'Track_len_obj',mc_dl)
+    if timer:
+	tdelta = datetime.now() - start 
+	time_v.append(tdelta.seconds)
+        start = datetime.now()
+
+    ########################
+    # Sweep the shower objects using track volumes
+    ########################
+    ell = mr.make_extend_lines_list(dataset,trackidx_holder,labels)
+    #ell = mr.make_extend_lines_list(dataset,trackidx_holder,labels, 10)
+
+    showeridx_holder, Strackidx_holder, labels = mr.TrackExtend_sweep_holders(dataset,showeridx_holder,labels,ell,5)
+    #datasetidx_holder = lh.label_to_idxholder(labels,25) # Converts the labels list into a list of indexvalues for datasets  [ [ list of index], [list of indexes].. [] ]  
+    if timer:
+	tdelta = datetime.now() - start 
+	time_v.append(tdelta.seconds)
+        start = datetime.now()
+
+    ########################
+    # Make Jsons
+    ########################
+    if make_jsons:
+        dh.MakeJson_Objects(dataset,Strackidx_holder,labels,jdir,jcount,'Alg3_T_sweep_obj', mc_dl)
+        dh.MakeJson_Objects(dataset,showeridx_holder,labels,jdir,jcount,'Alg3_S_sweep_obj', mc_dl)
+    if timer:
+	tdelta = datetime.now() - start 
+	time_v.append(tdelta.seconds)
+        start = datetime.now()
+
+    # Find out which showers are left
+    # This is not correct
+    if timer: 
+        return trackidx_holder , showeridx_holder , labels, time_v
+    return trackidx_holder , showeridx_holder , labels
+
+'''
+    strayidx_holder, remainidx_holder, rlabels = tss.stray_charge_removal(dataset,showeridx_holder,labels,100 , 36)
+    if timer:
+	tdelta = datetime.now() - start 
+	time_v.append(tdelta.microseconds/1000.)
+        start = datetime.now()
+    if make_jsons:
+        dh.MakeJson_Objects(dataset,remainidx_holder,rlabels,jdir,jcount,'post_remain_showerONLY_obj',mc_dl)
+    if timer:
+	tdelta = datetime.now() - start 
+	time_v.append(tdelta.microseconds/1000.)
+        start = datetime.now()
+
+    # Find out which showers are left
+    # This is not correct
+    if timer: 
+        return trackidx_holder , remainidx_holder , rlabels, time_v
+    return trackidx_holder , remainidx_holder , rlabels
+'''

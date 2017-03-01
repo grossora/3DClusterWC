@@ -5,12 +5,11 @@ from scipy.spatial import ConvexHull
 
 
 def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,min_pdelta,pangle_uncert,min_clust_length):
-#def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,pangle_uncert,min_clust_length):
-#def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,pdelta,min_clust_length):
-#def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,pdelta):
     # Clean Stitch 
     gap_dist_sq  = gap_dist*gap_dist
     k_radius_sq  = k_radius*k_radius 
+    min_clust_length_sq= min_clust_length*min_clust_length
+
     #k_radius = radius for points around the hulls minimal dist point 
     #pdelta = minimal distance allowed from the projection 
     CHQ_vec = []
@@ -33,18 +32,25 @@ def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,min_p
 	    print ' length of the points cluster' , str(len(points_v))
             continue
 
-	# Check if it is past the min_length
-	min_bd = hull.min_bound
-	max_bd = hull.max_bound
+        # Check if it is past the min_length
+        min_bd = hull.min_bound
+        max_bd = hull.max_bound
+        # distance using NP 
+        x_min = min_bd[0]
+        y_min = min_bd[1]
+        z_min = min_bd[2]
+        x_max = max_bd[0]
+        y_max = max_bd[1]
+        z_max = max_bd[2]
+
+        clust_length_sq = (x_max-x_min)*(x_max-x_min) + (z_max-z_min)*(z_max-z_min) + (z_max-z_min)*(z_max-z_min)
 	# distance using NP 
 	clust_length = np.linalg.norm(min_bd-max_bd)
-	if clust_length<min_clust_length:
+	if clust_length_sq<min_clust_length:
 	    #print ' look how small a cluster ' , str(clust_length)
 	    continue
 	
 	#print 'this is cluster length' , str(clust_length)
-
-	
         # Now we have the hull
         ds_hull_idx = [datasetidx_holder[a][i] for i in list(hull.vertices)] # Remeber use the true idx
         chq = [a,ds_hull_idx]

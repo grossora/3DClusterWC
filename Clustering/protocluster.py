@@ -35,6 +35,52 @@ def walker(inup, dist, mincluster):
                 #           print 'we are breaking out early'
                     break
             for te in tmpclust:
+                sqdist_test = (inup[j][0]-inup[te][0])*(inup[j][0]-inup[te][0])+(inup[j][1]-inup[te][1])*(inup[j][1]-inup[te][1])+(inup[j][2]-inup[te][2])*(inup[j][2]-inup[te][2])
+                #sqdist_test = pow(inup[j][0]-inup[te][0],2)+pow(inup[j][1]-inup[te][1],2)+pow(inup[j][2]-inup[te][2],2)
+                if sqdist_test<tdist:
+                    # add j to tmpclust
+                    tmpclust.append(j)
+                    if max_z<inup[j][2]:
+                        max_z = inup[j][2]
+                    break
+    # log the idxlist
+        if len(tmpclust)>mincluster:
+            for lab in tmpclust:
+                idxlist[lab] = idxcounter
+            idxcounter +=1
+    return idxlist
+#====================================================================================================================================
+
+############################################
+######### Walker Cluster ###################
+############################################
+def walker_old(inup, dist, mincluster):
+    idxlist = [-1 for x in range(len(inup))]
+    punused = [x for x in range(len(inup))]
+    tdist = dist*dist
+    idxcounter = 0
+
+    # Sort the unused list 
+    punused_z = [inup[i][2] for i in punused]
+    sort_idx = sorted(range(len(punused_z)), key=lambda k: punused_z[k])
+    unused = [punused[idx] for idx in sort_idx]
+
+    for i in unused:
+        # i is the first point
+        if idxlist[i] != -1:
+            continue
+        tmpclust = []# make none
+        tmpclust.append(i)
+        max_z = inup[i][2]
+    #print ' start of the i loop-------'
+        for j in unused:
+            if idxlist[j] !=-1:
+                continue
+            if idxlist[j] == -1:
+                if inup[j][2] - max_z >dist:
+                #           print 'we are breaking out early'
+                    break
+            for te in tmpclust:
                 sqdist_test = pow(inup[j][0]-inup[te][0],2)+pow(inup[j][1]-inup[te][1],2)+pow(inup[j][2]-inup[te][2],2)
                 if sqdist_test<tdist:
                     # add j to tmpclust
@@ -49,7 +95,7 @@ def walker(inup, dist, mincluster):
                 idxlist[lab] = idxcounter
             idxcounter +=1
     return idxlist
-#====================================================================================================================================
+
 #====================================================================================================================================
 #====================================================================================================================================
 

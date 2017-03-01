@@ -36,7 +36,39 @@ def sqdist_ptline_to_point(pt_a,pt_b,pt_t):
 ###########################################################################################
 
 
-def make_extend_lines_list(dataset , idxlist_for_tracks,labels,min_clust_length):
+def make_extend_lines_list(dataset , idxlist_for_tracks,labels):
+    # loop over all the 'track' points 
+    # take the pca for direction 
+    # extend the direction past the top and bottom in y 
+    # make a circle of radius that is user defined. 
+    # return the vector of points for each..there is no hull done here...  just getting the points to make hulls for 
+    lp_list = [] # Append will be slow.... but this is ok for now
+    for t in idxlist_for_tracks:
+        #Get PCA Direction # note... this will be easier when more organized ... we have done this loop already once
+        points = []
+	label_val = labels[t[0]]# This gets the label value to pass along
+        for p in t:
+            pt = [ dataset[p][0],dataset[p][1],dataset[p][2] ]
+            points.append(pt)
+        # This PCA Should always converge since we have done it already 
+	# There should be a Try in here
+        pca = PCA(n_components=3)
+        pca.fit(points)
+        tdir_forward = pca.components_[0]
+        tdir_backward = -1.0*pca.components_[0]
+        # Get start point 
+        sp = np.mean(np.asarray(points),axis=0)
+        # Instead of finding the box ... just extent past the farthest possible track ( corner to corner ) 
+        #  xchi = sqrt( zz+xx+yy) sqrrt( zDet**2, xdet**2, (ydet)**2) = 
+        mp_length = pow( pow(zDetL,2)+pow(xDetL,2) + pow(yDetL,2),0.5)
+        top_pt = sp + mp_length*tdir_forward
+        bottom_pt = sp + mp_length*tdir_backward
+        # Calcuate brute forced cyl polygon 
+        pointslist = [label_val,top_pt, bottom_pt]
+        lp_list.append(pointslist)
+    return lp_list
+
+def make_extend_lines_list_old(dataset , idxlist_for_tracks,labels,min_clust_length):
     # loop over all the 'track' points 
     # take the pca for direction 
     # extend the direction past the top and bottom in y 
@@ -84,6 +116,7 @@ def make_extend_lines_list(dataset , idxlist_for_tracks,labels,min_clust_length)
     return lp_list
 
 
+
 ###########################################################################################
 def TrackExtend_sweep(dataset, labels, extended_lines_list, doca, labelcase=-1):
 #def TrackExtend_sweep(dataset, labels, extended_lines_list, doca, unlabel=True):
@@ -114,6 +147,32 @@ def TrackExtend_sweep(dataset, labels, extended_lines_list, doca, labelcase=-1):
 	        labels[i]=t[0]
 		break 
     return labels
+
+###########################################################################################
+def TrackExtend_sweep_holders(dataset,idx_holder, labels, extended_lines_list, doca):
+    # 
+    doca_sq = doca*doca
+ 
+    unswept_holder = []
+    swept_holder = []
+    for cl in range(len(idx_holder)):
+	unswept = True
+	for i in idx_holder[cl]:
+            # Points are list
+            for t in extended_lines_list:
+                pt_to_line_dist_sq = sqdist_ptline_to_point(t[1],t[2],[dataset[i][0],dataset[i][1],dataset[i][2]])
+	        if pt_to_line_dist_sq<doca_sq:
+		    # Add this cluster to it by changing label
+		    for ii in idx_holder[cl]:
+	                labels[ii]=t[0]
+		    swept_holder.append(idx_holder[cl])
+		    unswept = False
+		    break 
+	    if not unswept:
+		break
+	if unswept:
+	    unswept_holder.append(idx_holder[cl])
+    return unswept_holder , swept_holder, labels
     
 		
 def TrackExtend_sweep_ShowerLabels(dataset, labels, extended_lines_list, doca, labelcase=-1):

@@ -2,7 +2,6 @@ import numpy as np
 from sklearn.decomposition import PCA
 from scipy.spatial import ConvexHull
 
-
 def clusterspread(dataset,datasetidx_holder, vari, clustersize):
     #print 'start of clusterspread'
     track_holder = []
@@ -49,6 +48,7 @@ def clusterlength_sep(dataset,datasetidx_holder, min_length):
 
     track_holder = []
     shower_holder = []
+    min_length_sq = min_length*min_length
 
     #for a in range(len(datasetidx_holder)):
     for a in datasetidx_holder:
@@ -71,13 +71,20 @@ def clusterlength_sep(dataset,datasetidx_holder, min_length):
         min_bd = hull.min_bound
         max_bd = hull.max_bound
         # distance using NP 
-        clust_length = np.linalg.norm(min_bd-max_bd)
-	if clust_length<= min_length:
+	x_min = min_bd[0]
+	y_min = min_bd[1]
+	z_min = min_bd[2]
+	x_max = max_bd[0]
+	y_max = max_bd[1]
+	z_max = max_bd[2]
+	
+	clust_length_sq = (x_max-x_min)*(x_max-x_min) + (z_max-z_min)*(z_max-z_min) + (z_max-z_min)*(z_max-z_min)
+        #clust_length = np.linalg.norm(min_bd-max_bd)
+	if clust_length_sq<= min_length_sq:
 	    shower_holder.append(a)
 	else :
 	    print ' ###############################'
 	    print ' Look we made a track object from length'
-	    print clust_length
 	    print ' ###############################'
 	    track_holder.append(a)
 	
