@@ -1,6 +1,5 @@
 import numpy as np
-#import ROOT
-import libPyROOT as ROOT
+import ROOT
 import mchandle as mh
 
 

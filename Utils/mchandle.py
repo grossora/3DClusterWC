@@ -1,6 +1,5 @@
 import math as math
-#import ROOT
-import libPyROOT as ROOT
+import ROOT
 
 
 xlo = 0
