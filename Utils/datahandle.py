@@ -1,5 +1,6 @@
 import numpy as np
-import ROOT
+#import ROOT
+import libPyROOT as ROOT
 import mchandle as mh
 
 
@@ -392,7 +393,6 @@ def ConvertWC_InTPC_thresh(infile,qt):
     spta = np.asanyarray(sptarray)
     cleanspta = Unique(spta)
     return cleanspta
-
 
 def ConvertWC_InRange(infile,xlo,xhi,ylo,yhi,zlo,zhi):
     #Bring in the file 

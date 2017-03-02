@@ -3,6 +3,7 @@ import collections as col
 
 
 def label_to_idxholder(labels,min_cluster):
+    # This must be slow.... we can spead this up
     shi = col.Counter(labels)
     # Shi is a set, and dic lookup 
     cval = [x[0] for x in shi.items() if x[1]>=min_cluster and x[0]!=-1]
