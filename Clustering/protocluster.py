@@ -198,11 +198,7 @@ def crawlernn(inup, dist, min_cls ):
     ## First sort the list based on z position since is it has the most spread
     unusedlist.sort(key=itemgetter(3))
     
-### Work comes back to here
-#### While unusedlist > min_cls
-
     while len(unusedlist)>min_cls:
-
 	#Find the minium and max  batch for z
 	minbatch_z = unusedlist[0][3]
 	#This makes the batch list for unused to work with. 
@@ -240,7 +236,6 @@ def crawlernn(inup, dist, min_cls ):
 	    # Now remove the entries from front bactch that are already in the temp cluster
 	    unused = [x for x in tunused if x not in temp_cluster]
 	    added_points = tmp_added
-	    
 
         # When getting out of the While we should have we have to clean up
         if len(temp_cluster) >= min_cls:
@@ -257,42 +252,3 @@ def crawlernn(inup, dist, min_cls ):
 	# because this means we tried them
     ### The unused list should still remain sorted... so we can just pick up with the next batch step	
     return indexlist
-
-def hull_check(points):
-    # Here we ant it to return the dimension number
-    # Take in the set of points
-    # loop over all points and make sure that there are 3 dim
-    x_p = -10000
-    y_p = -10000
-    z_p = -10000
-    x_good = False
-    y_good = False
-    z_good = False
-    for pt in points:
-        if x_p == -10000:
-            x_p = pt[0]
-            y_p = pt[1]
-            z_p = pt[2]
-            continue
-        # This is not the correct algo.... it needs more
-        if x_p !=pt[0] and not x_good:
-            x_good = True
-        if y_p !=pt[1] and not y_good:
-            y_good = True
-        if z_p !=pt[2] and not z_good:
-            z_good = True
-        if x_good and y_good and z_good:
-            return 3
-        x_p = pt[0]
-        y_p = pt[1]
-        z_p = pt[2]
-    boolv= [x_good,y_good,z_good]
-    if len([ i for i in boolv if i==True])==2:
-        return 2
-    if len([ i for i in boolv if i==True])==1:
-        return 1
-    if len([ i for i in boolv if i==True])==0:
-        return 0
-    # This really needs to be n+1 for checking dimensionality.... but we might get lucky ror now.
-
-

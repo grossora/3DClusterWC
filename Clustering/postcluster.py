@@ -1,8 +1,4 @@
 import numpy as np
-#from operator import itemgetter
-#from scipy.spatial import distance
-#from scipy.spatial import ConvexHull
-#import SParams.axisfit as axfi
 import math as math
 import Merging.merger as mr
 
@@ -12,8 +8,8 @@ import Merging.merger as mr
 
 def cluster_volumes(dataset,tracks_epts,min_doca):
     #tracks_epts [ [label,top_pt,bottom_pt]...] 
-    min_doca_sq = min_doca*min_doca
 
+    min_doca_sq = min_doca*min_doca
     labels = [-1 for x in range(len(dataset))]
 
     # Loop over dataset entirly Don't worry about what was previously clustered
@@ -24,7 +20,6 @@ def cluster_volumes(dataset,tracks_epts,min_doca):
 	for line in range(len(tracks_epts)):
 	    sq_dist = mr.sqdist_ptline_to_point(tracks_epts[line][1],tracks_epts[line][2],[dataset[i][0],dataset[i][1],dataset[i][2]])
 	    if sq_dist<lowest_sqdist and sq_dist<min_doca_sq:
-	    #if sq_dist<lowest_sqdist:
 	        lowest_sqdist=sq_dist
 		v_label = line 
 	    
@@ -91,7 +86,6 @@ def cluster_near_clusters(dataset, cluster_holder, near_dist):
                         break #Because you found a match there is no need to continue the for loop.
                 if not merged: #If there was no match then add the list to the resultset, so it doesnt get left out.
                     resultlist.append(l)
- 
 
     mergedidx_holder= []
     merged_pass = [item for sublist in resultlist for item in sublist]
@@ -117,9 +111,7 @@ def cluster_near_clusters(dataset, cluster_holder, near_dist):
         for idx in mergedidx_holder[l]:
             labels[idx] = l
 
-
     #### Now we have labels and a new holder to work with for the clusters 
- 
     return dataset , mergedidx_holder , labels
 
 
