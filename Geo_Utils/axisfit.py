@@ -1,19 +1,10 @@
 import os 
 import numpy as np
 from sklearn.decomposition import PCA
+import wpca as wp
 
 
-def firstfit(inup,cl_idx_v):
-    # inup is the whole dataset, cl_idx is the cluster index position for points
-    #make the dataset for the cluster into an np array 
-    cl_pts = []
-    for s in cl_idx_v: 
-	t = [inup[s][0],inup[s][1],inup[s][2]]
-	cl_pts.append(t)
-    cl_pts = np.asarray(cl_pts)
-    uu, dd, vv = np.linalg.svd(cl_pts - cl_pts.mean(axis=0))
-    # This is the first PC is vv[0] 
-    return vv[0]
+
 
 def showerfit(inup,cl_idx_v):
     # inup is the whole dataset, cl_idx is the cluster index position for points
@@ -59,22 +50,7 @@ def weightshowerfit(inup,cl_idx_v):
     point = cl_pts.mean(axis=0)
     return point , vv[0] 
 
-
-def fitPCA_firstdir(inup,cl_idx_v):
-#def showerfitPCA(inup,cl_idx_v):
-    # inup is the whole dataset, cl_idx is the cluster index position for points
-    #make the dataset for the cluster into an np array 
-    # Data is in the form [[x,y,z].[],...[xn,yn,zn]]
-    cl_pts = []
-    for s in cl_idx_v: 
-	t = [inup[s][0],inup[s][1],inup[s][2]]
-	cl_pts.append(t)
-    pca = PCA(n_components=1)
-    pca.fit(dd)
-    strong = pca.components_
-    return strong
-
-def PCAParams(inup,cl_idx_v,n_degree):
+def PCAParamsR(inup,cl_idx_v,n_degree):
     # inup is the whole dataset, cl_idx is the cluster index position for points
     #make the dataset for the cluster into an np array 
     # Data is in the form [[x,y,z].[],...[xn,yn,zn]]
@@ -86,8 +62,8 @@ def PCAParams(inup,cl_idx_v,n_degree):
     pca.fit(cl_pts)
     par = pca.explained_variance_ratio_
     return par
- 
-def PCAParams_err(inup,cl_idx_v,n_degree):
+
+def PCAParams(inup,cl_idx_v,n_degree):
     # inup is the whole dataset, cl_idx is the cluster index position for points
     #make the dataset for the cluster into an np array 
     # Data is in the form [[x,y,z].[],...[xn,yn,zn]]
@@ -98,8 +74,7 @@ def PCAParams_err(inup,cl_idx_v,n_degree):
     pca = PCA(n_components=n_degree)
     pca.fit(cl_pts)
     par = pca.explained_variance_
-    return par   
-
+    return par
 def PCAParams_dir(inup,cl_idx_v,n_degree):
     # inup is the whole dataset, cl_idx is the cluster index position for points
     #make the dataset for the cluster into an np array 
@@ -110,5 +85,57 @@ def PCAParams_dir(inup,cl_idx_v,n_degree):
 	cl_pts.append(t)
     pca = PCA(n_components=n_degree)
     pca.fit(cl_pts)
+    par = pca.components_
+    return par
+
+
+def WPCAParamsR(inup,cl_idx_v,n_degree):
+    # inup is the whole dataset, cl_idx is the cluster index position for points
+    #make the dataset for the cluster into an np array 
+    # Data is in the form [[x,y,z].[],...[xn,yn,zn]]
+    cl_pts = []
+    c_wts = []
+    for s in cl_idx_v: 
+	t = [inup[s][0],inup[s][1],inup[s][2]]
+	#c = [inup[s][3],inup[s][3],inup[s][3]]
+	c = [1,1,1]
+	cl_pts.append(t)
+        c_wts.append(c)
+    pca = wp.WPCA(n_components=n_degree)
+    pca.fit(cl_pts,weights=c_wts)
+    par = pca.explained_variance_ratio_
+    return par
+
+def WPCAParams(inup,cl_idx_v,n_degree):
+    # inup is the whole dataset, cl_idx is the cluster index position for points
+    #make the dataset for the cluster into an np array 
+    # Data is in the form [[x,y,z].[],...[xn,yn,zn]]
+    cl_pts = []
+    c_wts = []
+    for s in cl_idx_v: 
+	t = [inup[s][0],inup[s][1],inup[s][2]]
+	#c = [inup[s][3],inup[s][3],inup[s][3]]
+	c = [1,1,1]
+	cl_pts.append(t)
+        c_wts.append(c)
+    pca = wp.WPCA(n_components=n_degree)
+    pca.fit(cl_pts,weights=c_wts)
+    par = pca.explained_variance_
+    return par
+
+def WPCAParams_dir(inup,cl_idx_v,n_degree):
+    # inup is the whole dataset, cl_idx is the cluster index position for points
+    #make the dataset for the cluster into an np array 
+    # Data is in the form [[x,y,z].[],...[xn,yn,zn]]
+    cl_pts = []
+    c_wts = []
+    for s in cl_idx_v: 
+	t = [inup[s][0],inup[s][1],inup[s][2]]
+	c = [1,1,1]
+	#c = [inup[s][3],inup[s][3],inup[s][3]]
+	cl_pts.append(t)
+        c_wts.append(c)
+    pca = wp.WPCA(n_components=n_degree)
+    pca.fit(cl_pts,weights=c_wts)
     par = pca.components_
     return par
