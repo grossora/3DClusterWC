@@ -101,7 +101,7 @@ def openingangle(shrA, shrB, vtx):
     sma = np.sqrt(shrA_dir[0]*shrA_dir[0] + shrA_dir[1]*shrA_dir[1]+shrA_dir[2]*shrA_dir[2])
     smb = np.sqrt(shrB_dir[0]*shrB_dir[0] + shrB_dir[1]*shrB_dir[1]+shrB_dir[2]*shrB_dir[2])
     cos = np.dot(shrA_dir,shrB_dir) /( sma*smb  )
-    #print 'this is cos ', str(cos)
+    print 'this is cos ', str(cos)
     angle = math.acos(cos)
     #print 'this is angle ', str(angle)
     return angle
