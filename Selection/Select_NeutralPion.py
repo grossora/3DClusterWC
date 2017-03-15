@@ -37,10 +37,16 @@ def CorrelatedObjects( dataset,idx_holder,labels):
          #   print 'radL B', str(radL_b)
             angle = selpz.openingangle(shrA,shrB,vertex)
 	    # If we pass the cuts.... keep this pair
+
+
 	    # crap cut for fun
 	    if IP>20: 
 	        continue
-	    if angle<0.3: 
+	    if angle<0.2: 
+	        continue
+	    if angle>2.94: 
+	        continue
+	    if radL_a>50 and radL_b>50: 
 	        continue
 	    keptpairs.append(a)
 	    keptpairs.append(b)
