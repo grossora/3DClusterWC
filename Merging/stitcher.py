@@ -6,30 +6,29 @@ from scipy.spatial import ConvexHull
 
 def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,min_pdelta,pangle_uncert,min_clust_length):
     # Clean Stitch 
+    #k_radius = radius for points around the hulls minimal dist point 
+    #pdelta = minimal distance allowed from the projection 
+
     gap_dist_sq  = gap_dist*gap_dist
     k_radius_sq  = k_radius*k_radius 
     min_clust_length_sq= min_clust_length*min_clust_length
 
-    #k_radius = radius for points around the hulls minimal dist point 
-    #pdelta = minimal distance allowed from the projection 
     CHQ_vec = []
     # ^^^^^^ Will be of the form [    [datasetidx_holder INDEX, the vertices of the hull, total_charge] ]
+
     for a in range(len(datasetidx_holder)):
         points_v = []
-#        tot_q = 0.0
         for i in datasetidx_holder[a]:
             if labels[i]==-1:
                 break
             pt = [ dataset[i][0],dataset[i][1],dataset[i][2]]
             points_v.append(pt)
-            #tot_q+= dataset[i][3]
         #Try to make a hull 
         try:
             hull = ConvexHull(points_v)
         except:
-	    
 	    print ' AHHHHHHHHHH couldnt make hull'
-	    print ' length of the points cluster' , str(len(points_v))
+	    #print ' length of the points cluster' , str(len(points_v))
             continue
 
         # Check if it is past the min_length
@@ -43,21 +42,18 @@ def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,min_p
         y_max = max_bd[1]
         z_max = max_bd[2]
 
-        clust_length_sq = (x_max-x_min)*(x_max-x_min) + (z_max-z_min)*(z_max-z_min) + (z_max-z_min)*(z_max-z_min)
-	# distance using NP 
-	clust_length = np.linalg.norm(min_bd-max_bd)
-	if clust_length_sq<min_clust_length:
-	    #print ' look how small a cluster ' , str(clust_length)
+        clust_length_sq = (x_max-x_min)*(x_max-x_min) + (y_max-y_min)*(y_max-y_min) + (z_max-z_min)*(z_max-z_min)
+	if clust_length_sq<min_clust_length_sq:
+	    print ' are we losing things on the min cluster cut?'
 	    continue
 	
-	#print 'this is cluster length' , str(clust_length)
         # Now we have the hull
         ds_hull_idx = [datasetidx_holder[a][i] for i in list(hull.vertices)] # Remeber use the true idx
         chq = [a,ds_hull_idx]
-        #chq = [a,ds_hull_idx,tot_q]
         CHQ_vec.append(chq)
 
     clust_merge_plex = [] # Pairs of local clusters that need to be merged There are from the id from the datasetidx_holder labels
+
     for a in range(len(CHQ_vec)):
         # Get the first 
         first_CHQ = CHQ_vec[a]
@@ -71,39 +67,46 @@ def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,min_p
                 for j in range(len(second_CHQ[1])):
                     ## RG This is slow... USE Dist SQ to speed up...  do it yourself
                     test_dist_sq = ((dataset[first_CHQ[1][i]][0] - dataset[second_CHQ[1][j]][0]) *(dataset[first_CHQ[1][i]][0] - dataset[second_CHQ[1][j]][0])) +((dataset[first_CHQ[1][i]][1] - dataset[second_CHQ[1][j]][1]) *(dataset[first_CHQ[1][i]][1] - dataset[second_CHQ[1][j]][1])) + ( (dataset[first_CHQ[1][i]][2] - dataset[second_CHQ[1][j]][2]) *(dataset[first_CHQ[1][i]][2] - dataset[second_CHQ[1][j]][2]))
-                    #test_dist = distance.euclidean([dataset[first_CHQ[1][i]][0],dataset[first_CHQ[1][i]][1],dataset[first_CHQ[1][i]][2]],[dataset[second_CHQ[1][j]][0],dataset[second_CHQ[1][j]][1],dataset[second_CHQ[1][j]][2]])
                     if  test_dist_sq<gap_dist_sq and test_dist_sq<cur_smallest_dist_sq:
                         cur_smallest_dist_sq = test_dist_sq
                         cur_pair = [i,j] # This is the idx value that should corespond to dataset for this pair of hull vertices
+		if pow(cur_smallest_dist_sq,0.5) <2:
+		    print'look at somethings that are real small '
+		    print pow(cur_smallest_dist_sq,0.5)
+		    
+		
+
             if len(cur_pair)==0:
                 #we didn't get anything to match
                 continue
             # If we have a pair... look at the NN points in each hull seperatly
             #.... then get local PCA... and compare
+
             # First vertex  position in the CHQ_vec
             clst_label_a = first_CHQ[0] # This is the label coresponding to which posiition in the holder    
             clst_indexs_a = first_CHQ[1] # This is a list of index for this cluster... index of datasets
             vp_idx_a = first_CHQ[1][cur_pair[0]] # This is the ds index for the vertex in question
+
             # second vertex  position in the CHQ_vec
             clst_label_b = second_CHQ[0]        # This is the label coresponding to which posiition in the holder    
             clst_indexs_b =  second_CHQ[1] # This is a list of index for this cluster... index of datasets
             vp_idx_b = second_CHQ[1][cur_pair[1]] # This is the ds index for the vertex in question
 
             # Now do the comparison
-            #Find First PCA 
             local_pts_idx_a = []
             for i in datasetidx_holder[clst_label_a]:
             #for i in clst_indexs_a:
-                #k_dist = distance.euclidean([dataset[i][0],dataset[i][1],dataset[i][2]],[dataset[vp_idx_a][0],dataset[vp_idx_a][1],dataset[vp_idx_a][2]])
                 k_dist_sq = ((dataset[i][0] -dataset[vp_idx_a][0])*(dataset[i][0] -dataset[vp_idx_a][0])) +((dataset[i][1] -dataset[vp_idx_a][1])*(dataset[i][1] -dataset[vp_idx_a][1])) +((dataset[i][2] -dataset[vp_idx_a][2])*(dataset[i][2] -dataset[vp_idx_a][2])) 
                 if k_dist_sq<k_radius_sq:
                     local_pts_idx_a.append(i)
+
             # Find the PCA
             local_PCA_a = [-999]
             local_PCA_dir_a = [-999]
             try:
-                local_PCA_a = axfi.PCAParams(dataset,local_pts_idx_a,3)
-                local_PCA_dir_a = axfi.PCAParams_dir(dataset,local_pts_idx_a,3)
+		# Use the charge weighted PCA
+                local_PCA_a = axfi.WPCAParams(dataset,local_pts_idx_a,3)
+                local_PCA_dir_a = axfi.WPCAParams_dir(dataset,local_pts_idx_a,3)
             except:
                 local_PCA_a = [-999]
 		print ' AHHHHHHHHHH AAAA Bad PCA'
@@ -111,18 +114,18 @@ def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,min_p
 
             #Find second PCA 
             local_pts_idx_b = []
-            #for i in clst_indexs_b:
             for i in datasetidx_holder[clst_label_b]:
-                #k_dist = distance.euclidean([dataset[i][0],dataset[i][1],dataset[i][2]],[dataset[vp_idx_b][0],dataset[vp_idx_b][1],dataset[vp_idx_b][2]])
                 k_dist_sq = ((dataset[i][0] -dataset[vp_idx_b][0])*(dataset[i][0] -dataset[vp_idx_b][0])) +((dataset[i][1] -dataset[vp_idx_b][1])*(dataset[i][1] -dataset[vp_idx_b][1]))   +((dataset[i][2] -dataset[vp_idx_b][2])*(dataset[i][2] -dataset[vp_idx_b][2])) 
                 if k_dist_sq<k_radius_sq:
                     local_pts_idx_b.append(i)
+
             # Find the PCA
             local_PCA_b = [-999]
             local_PCA_dir_b = [-999]
             try:
-                local_PCA_b = axfi.PCAParams(dataset,local_pts_idx_b,3)
-                local_PCA_dir_b = axfi.PCAParams_dir(dataset,local_pts_idx_b,3)
+		# Use the charge weighted PCA
+                local_PCA_b = axfi.WPCAParams(dataset,local_pts_idx_b,3)
+                local_PCA_dir_b = axfi.WPCAParams_dir(dataset,local_pts_idx_b,3)
             except:
                 local_PCA_b = [-999]
 		print ' AHHHHHHHHHH BBBB Bad PCA'
@@ -135,13 +138,9 @@ def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,min_p
             vtx_A =  np.asarray([dataset[vp_idx_a][0],dataset[vp_idx_a][1],dataset[vp_idx_a][2]])
             vtx_B =  np.asarray([dataset[vp_idx_b][0],dataset[vp_idx_b][1],dataset[vp_idx_b][2]])
             Length_between_vtx = pow( pow((vtx_A[0] - vtx_B[0]),2) + pow((vtx_A[1] - vtx_B[1]),2)+ pow((vtx_A[2] - vtx_B[2]),2) ,0.5) # This is slow
-            #Length_between_vtx = pow( pow((vtx_A[0] - vtx_B[0]),2) + pow((vtx_A[1] - vtx_B[1]),2)+ pow((vtx_A[2] - vtx_B[2]),2) ,0,5) # This is slow
 	    # ^^^ This is the gap
-            #print ' Length between vtx'
-	    #print Length_between_vtx	
 
-            #Length_between_vtx = distance.euclidean(vtx_A,vtx_B)
-
+	    # Project things forward from the point along the PCA direction in both directions
             projA_plus = vtx_A + np.asarray([1,1,1])*Length_between_vtx * np.asarray(local_PCA_dir_a[0])
             projA_minus = vtx_A - np.asarray([1,1,1])*Length_between_vtx * np.asarray(local_PCA_dir_a[0])
             projB_plus = vtx_B + np.asarray([1,1,1])*Length_between_vtx * np.asarray(local_PCA_dir_b[0])
@@ -153,10 +152,8 @@ def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,min_p
             deltaBA_plus_sq = (projB_plus[0] - vtx_A[0])*(projB_plus[0] - vtx_A[0]) + (projB_plus[1] - vtx_A[1])*(projB_plus[1] - vtx_A[1])+(projB_plus[2] - vtx_A[2])*(projB_plus[2] - vtx_A[2])
             deltaBA_minus_sq = (projB_minus[0] - vtx_A[0])*(projB_minus[0] - vtx_A[0]) + (projB_minus[1] - vtx_A[1])*(projB_minus[1] - vtx_A[1])+(projB_minus[2] - vtx_A[2])*(projB_minus[2] - vtx_A[2])
 
-	
             # Assume this should work for small angles make pdelta depended on the gap and a fixed angle uncertanty
 	    # I would try 5 degree... 0.087 rads 
-	    # Use B ~ theta(rads)*Gap
             pdelta = min_pdelta+pangle_uncert*Length_between_vtx 
             pdelta_sq  = pdelta*pdelta 
 
@@ -168,6 +165,12 @@ def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,min_p
 
             if deltaBA_plus_sq < pdelta_sq or deltaBA_minus_sq <pdelta_sq:
                 BA = True
+
+	    # or  they are just really really freakin close... 
+	    if pow( (vtx_A[0]- vtx_B[0]) *(vtx_A[0]- vtx_B[0]) +(vtx_A[1]- vtx_B[1]) *(vtx_A[1]- vtx_B[1]) +(vtx_A[2]- vtx_B[2]) *(vtx_A[2]- vtx_B[2])   , 0.5) < 5:
+		print ' mereging based on just the vertex'
+		AB = True
+		BA = True
 
             if not AB :
                 continue
@@ -214,13 +217,19 @@ def Track_Stitcher_epts(dataset,datasetidx_holder,labels,gap_dist,k_radius,min_p
             for i in cidx:
                 labels[i] = labels_label
 #----------------------------------------------------------
-
     # Return here? 
     # Currently this is only working of the labels end of things... .the new dataset is not addresed yet
     # I just  need the labels at the moment .... and this is a fucking mess.... 
     return datasetidx_holder,labels
 
-def hull_touch(dataset, datasetidx_holder, labels, m_dist):
+
+
+
+
+
+# This is an algo I should get to work 
+#def hull_touch(dataset, datasetidx_holder, labels, m_dist):
+'''
     CHQ_vec = []
     # ^^^^^^ Will be of the form [    [datasetidx_holder INDEX, the vertices of the hull, total_charge] ]
     for a in range(len(datasetidx_holder)):
@@ -303,12 +312,4 @@ def hull_touch(dataset, datasetidx_holder, labels, m_dist):
 		labels[idx]=labels_label
 
     return labels
-
-	
-    
-    
-
-
-
-
-
+'''
