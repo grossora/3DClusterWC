@@ -406,8 +406,9 @@ def piz_mc_info(infile):
 	#Is this a non-dalitz
 	if en.mc_pdg[1]!=22 or en.mc_pdg[2]!=22:
 	    # Write out a bail list to return
-	    bail = [-1 for x in xrange(0,25)]
-            bails = str(bail).split('[')[1].rsplit(']')[0].replace(',','')
+            fill = str('-1 ')*24
+            bails = fill.rsplit(' ',1)[0]
+	    #bail = [-1 for x in xrange(0,24)]
 	    return bails
 	vtx_pi_x = en.mc_startXYZT[0]
 	vtx_pi_y = en.mc_startXYZT[1]
