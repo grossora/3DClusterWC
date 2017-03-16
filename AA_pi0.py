@@ -139,7 +139,7 @@ for f in sys.argv[1:]:
     # This is ana
     if make_ana:
         #Ea.Ana_CutPi0_mc_pair_vtx(f,Charge_thresh,dataset,  jcount, selidx_holder, trackidx_holder,mc_dl, filename='Full_Ana_SelectedPi0_pair')
-        Ea.Ana_CutPi0_mc_pair_vtx(f,Charge_thresh,dataset,  jcount, showeridx_holder, trackidx_holder,mc_dl, filename='lhullpair_Pi0')
+        Ea.Ana_CPi0_mc_pair_vtx(f,Charge_thresh,dataset,  jcount, showeridx_holder, trackidx_holder,mc_dl, filename='lhullpair_Pi0')
         Ea.Pi0_Ana_Object(f, Charge_thresh,dataset, showeridx_holder, trackidx_holder, jcount, mc_dl,ts='shower', filename='lhullShower_pi0')
         Ea.Pi0_Ana_Object(f, Charge_thresh,dataset, showeridx_holder, trackidx_holder, jcount, mc_dl,ts='track', filename='lhullTrack_pi0')
         #Ea.Ana_CutPi0_mc_pair_vtx(f,Charge_thresh,dataset,  jcount, showeridx_holder, trackidx_holder,mc_dl, filename='WTEST_Ana_SelectedPi0_pair')

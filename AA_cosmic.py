@@ -24,10 +24,10 @@ from datetime import datetime
 debug = True
 #make_jsons = False
 make_jsons = True
-make_ana = True
-#make_ana = False 
+#make_ana = True
+make_ana = False 
 Charge_thresh = 4000 # Need to be set better This is used to mask over low charge spacepoints when bringing them into the Dataset
-method_name = 'AA_cosmic'
+method_name = 'AA_cosmic_sel_n2'
 drun_dir = method_name
 jcount = -1
 lookup = open('Out_text/cosmic_sel.txt','a+')
