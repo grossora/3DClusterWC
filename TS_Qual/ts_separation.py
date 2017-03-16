@@ -1,15 +1,16 @@
 import numpy as np
-from sklearn.decomposition import PCA
+#from sklearn.decomposition import PCA
+import Geo_Utils.axisfit as axfi
 from scipy.spatial import ConvexHull
 
-def clusterspread(dataset,datasetidx_holder, vari, clustersize):
-    #print 'start of clusterspread'
+def clusterspread_first(dataset,datasetidx_holder, vari, clustersize):
     track_holder = []
     shower_holder = []
+
     for a in datasetidx_holder:
         points = []
         for p in a:
-            pt = [ dataset[p][0],dataset[p][1],dataset[p][2] ]
+            pt = [ dataset[p][0],dataset[p][1],dataset[p][2] , dataset[p][3]]
             points.append(pt)
 
         if len(points)<clustersize:
@@ -19,23 +20,13 @@ def clusterspread(dataset,datasetidx_holder, vari, clustersize):
 
 	par = -999
         try:
-            pca = PCA(n_components=3)
-            pca.fit(points)
-            par = pca.explained_variance_
-            #par = pca.explained_variance_ratio_
-	    #print' this is the vairance '
-            #print pca.explained_variance_
-	    #print' this is the ratio'
-            #print pca.explained_variance_ratio_
+	    par = axfi.WPCAParams(points,[x for x in range(len(points))],3)
 	except:
 	    print ' could not make a PCA'
             shower_holder.append(a)
 	    continue
 
         if par[0] > vari:
-        #if par[0] > first:
-            #print len(points)
-            #print par[0]
             track_holder.append(a)
             continue
         else:
@@ -43,6 +34,161 @@ def clusterspread(dataset,datasetidx_holder, vari, clustersize):
 
     return shower_holder, track_holder
 
+def clusterspreadR_first(dataset,datasetidx_holder, vari, clustersize):
+    track_holder = []
+    shower_holder = []
+
+    for a in datasetidx_holder:
+        points = []
+        for p in a:
+            pt = [ dataset[p][0],dataset[p][1],dataset[p][2] , dataset[p][3]]
+            points.append(pt)
+
+        if len(points)<clustersize:
+            # Push this to the showers holder
+            shower_holder.append(a)
+            continue
+
+	par = -999
+        try:
+	    par = axfi.WPCAParamsR(points,[x for x in range(len(points))],3)
+	except:
+	    print ' could not make a PCA'
+            shower_holder.append(a)
+	    continue
+
+        if par[0] > vari:
+            track_holder.append(a)
+            continue
+        else:
+            shower_holder.append(a)
+
+    return shower_holder, track_holder
+
+#============================================================================
+def clusterspreadR(dataset,datasetidx_holder, vari_lo=0, vari_hi=1, moment = 0 ):
+    in_holder = []
+    out_holder = []
+
+    for a in datasetidx_holder:
+        points = []
+        for p in a:
+            pt = [ dataset[p][0],dataset[p][1],dataset[p][2] , dataset[p][3]]
+            points.append(pt)
+
+	par = -999
+        try:
+	    par = axfi.WPCAParamsR(points,[x for x in range(len(points))],3)
+	except:
+	    print ' could not make a PCA'
+            out_holder.append(a)
+	    continue
+
+        if par[moment] > vari_lo and par[moment]<vari_hi:
+            in_holder.append(a)
+            continue
+        else:
+            out_holder.append(a)
+
+    return out_holder, in_holder
+
+#============================================================================
+def cluster_lhull_cut(dataset,datasetidx_holder):
+
+    track_holder = []
+    shower_holder = []
+
+    # Function we will  use for the cut is something like pow(SA,3/2)
+    for a in datasetidx_holder:
+        points_v = []
+	for i in a:
+	    pt = [ dataset[i][0],dataset[i][1],dataset[i][2]]
+	    points_v.append(pt)
+        try:
+            hull = ConvexHull(points_v)
+        except:
+            print ' AHHHHHHHHHH couldnt make hull'
+	    # Put the cluster in the shower
+	    shower_holder.append(a)
+            continue
+
+        # Check if it is past the min_length
+        min_bd = hull.min_bound
+        max_bd = hull.max_bound
+        # distance using NP 
+	x_min = min_bd[0]
+	y_min = min_bd[1]
+	z_min = min_bd[2]
+	x_max = max_bd[0]
+	y_max = max_bd[1]
+	z_max = max_bd[2]
+	
+	clust_length = pow((x_max-x_min)*(x_max-x_min) + (y_max-y_min)*(y_max-y_min) + (z_max-z_min)*(z_max-z_min),0.5)
+
+	# This is the function we will cut on .... it's derived from single pi0 and SA
+	Test_cut_param = pow(clust_length,1.5)-15
+
+	if hull.area>= Test_cut_param:
+	    shower_holder.append(a)
+	else :
+	    print ' ###############################'
+	    print ' Look we made a track object from length'
+	    print ' ###############################'
+	    track_holder.append(a)
+	
+    return shower_holder, track_holder
+
+#============================================================================
+def cluster_lhull_length_cut(dataset,datasetidx_holder, min_length):
+
+    track_holder = []
+    shower_holder = []
+
+    # Function we will  use for the cut is something like pow(SA,3/2)
+    for a in datasetidx_holder:
+        points_v = []
+	for i in a:
+	    pt = [ dataset[i][0],dataset[i][1],dataset[i][2]]
+	    points_v.append(pt)
+        try:
+            hull = ConvexHull(points_v)
+        except:
+            print ' AHHHHHHHHHH couldnt make hull'
+	    # Put the cluster in the shower
+	    shower_holder.append(a)
+            continue
+
+        # Check if it is past the min_length
+        min_bd = hull.min_bound
+        max_bd = hull.max_bound
+        # distance using NP 
+	x_min = min_bd[0]
+	y_min = min_bd[1]
+	z_min = min_bd[2]
+	x_max = max_bd[0]
+	y_max = max_bd[1]
+	z_max = max_bd[2]
+	
+	clust_length = pow((x_max-x_min)*(x_max-x_min) + (y_max-y_min)*(y_max-y_min) + (z_max-z_min)*(z_max-z_min),0.5)
+
+	if clust_length>= min_length:
+	    track_holder.append(a)
+	# This is the function we will cut on .... it's derived from single pi0 and SA
+	Test_cut_param = pow(clust_length,1.5)-15
+
+	if hull.area>= Test_cut_param:
+	    shower_holder.append(a)
+	else :
+	    print ' ###############################'
+	    print ' Look we made a track object from length'
+	    print ' ###############################'
+	    track_holder.append(a)
+	
+    return shower_holder, track_holder
+
+
+
+#============================================================================
 
 def clusterlength_sep(dataset,datasetidx_holder, min_length):
 
@@ -61,11 +207,9 @@ def clusterlength_sep(dataset,datasetidx_holder, min_length):
             hull = ConvexHull(points_v)
         except:
             print ' AHHHHHHHHHH couldnt make hull'
-            print ' length of the points cluster' , str(len(points_v))
 	    # Put the cluster in the shower
 	    shower_holder.append(a)
             continue
-
 
         # Check if it is past the min_length
         min_bd = hull.min_bound
@@ -78,8 +222,7 @@ def clusterlength_sep(dataset,datasetidx_holder, min_length):
 	y_max = max_bd[1]
 	z_max = max_bd[2]
 	
-	clust_length_sq = (x_max-x_min)*(x_max-x_min) + (z_max-z_min)*(z_max-z_min) + (z_max-z_min)*(z_max-z_min)
-        #clust_length = np.linalg.norm(min_bd-max_bd)
+	clust_length_sq = (x_max-x_min)*(x_max-x_min) + (y_max-y_min)*(y_max-y_min) + (z_max-z_min)*(z_max-z_min)
 	if clust_length_sq<= min_length_sq:
 	    shower_holder.append(a)
 	else :
@@ -93,6 +236,7 @@ def clusterlength_sep(dataset,datasetidx_holder, min_length):
 
 ######################################################################
 
+### Needs to be updated
 def stray_charge_removal(dataset,datasetidx_holder,labels, max_csize, m_dist):
     CHQ_vec = []
     stray_holder = []
@@ -174,12 +318,4 @@ def stray_charge_removal(dataset,datasetidx_holder,labels, max_csize, m_dist):
 		labels[lab] = -1
 
     return stray_holder, remain_holder, labels
-    
-
-
-
-
 ######################################################################
-
-
-
