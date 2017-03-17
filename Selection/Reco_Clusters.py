@@ -18,11 +18,11 @@ from datetime import datetime
 #################################################################################
 #################################################################################
 
+
 def Reco_trackshower( dataset, mc_dl , jdir, jcount , make_jsons=True,timer=False):
     # Need some type of config 
     min_spts = 20
     nn_dist = 6
-#def Reco_trackshower( dataset, mc_dl , jdir, jcount , make_jsons=True):
     # This will take in a dataset and file information
     # Returns a rebased dataset, clustered index holder for showers, labels :  with candidate shower events 
     ########################
@@ -122,8 +122,6 @@ def Reco_trackshower( dataset, mc_dl , jdir, jcount , make_jsons=True,timer=Fals
 	tdelta = datetime.now() - start 
 	time_v.append(tdelta.seconds)
         start = datetime.now()
-
-    ########################
     # cut out showers based on PCA cuts 
     ########################
 
@@ -157,6 +155,30 @@ def Reco_trackshower( dataset, mc_dl , jdir, jcount , make_jsons=True,timer=Fals
     return trackidx_holder , showeridx_holder , labels
 
 
+
+#############################################################################################################
+
+def rebase_Full_reco(dataset,mc_dl , jdir, jcount , make_jsons=True,timer=False):
+    # Start of a robust clustering and reco	
+
+    ########################
+    # cluster using tight NN
+    ########################
+    labels = pc.crawlernn(dataset, 4, 20 ) # Runs clustering and returns labels list 
+    datasetidx_holder = lh.label_to_idxholder(labels,20) # Converts the labels list into a list of indexvalues for datasets  [ [ list of index], [list of indexes].. [] ]  
+
+    ########################
+    # Make Jsons
+    ########################
+    if make_jsons:
+        dh.MakeJson(dataset,labels,jdir,jcount,'rebase_Alg1',mc_dl)
+
+    trackidx_holder = []
+    showeridx_holder = []
+
+    return trackidx_holder , showeridx_holder , labels
+
+#############################################################################################################
 
 
 ##########################3
