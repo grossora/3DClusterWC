@@ -2,10 +2,6 @@ import numpy as np
 import math as math
 import Merging.merger as mr
 
-
-
-
-
 def cluster_volumes(dataset,tracks_epts,min_doca):
     #tracks_epts [ [label,top_pt,bottom_pt]...] 
 
@@ -46,8 +42,6 @@ def cluster_volumes_keep(dataset,labels,tracks_epts,min_doca):
 	if v_label!=-999:
 	    labels[i] = v_label
     return labels
-
-
 
 
 def cluster_near_clusters(dataset, cluster_holder, near_dist):
