@@ -4,15 +4,10 @@ import SParams.axisfit as axfi
 import SParams.selpizero as selpz
 
 
-
-
 def cluster_pairs_data_textmaker(dataset, datasetidx_holder, ers_string, out_textfile):
     # Open the textfile 
     lookup = open('Out_text/{}.txt'.format(out_textfile),'a+')
     # will I need to move the counter to the bottom? Will it matter? 
-
-
-    # Fill out with failure modes first
 
     # outputstring_vector
     id_counter = 0
@@ -51,5 +46,3 @@ def cluster_pairs_data_textmaker(dataset, datasetidx_holder, ers_string, out_tex
 	    id_B +=1        
     lookup.close()
     return
-    
-
