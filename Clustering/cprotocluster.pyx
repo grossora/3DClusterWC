@@ -5,43 +5,63 @@ from operator import itemgetter # This should be removed... but it's not too hea
 # Clusters only return a labels list
 ####
 
+cdef inline float square_dist(float ax,float ay,float az ,float bx,float by,float bz ):
+    return (ax-bx)*(ax-bx)+(ay-by)*(ay-by)+(az-bz)*(az-bz)
+
+
 ############################################
 ######### Walker Cluster ###################
 ############################################
-def walker(inup, dist, mincluster):
+def walker(inup, float dist, int mincluster):
+    #Initialize an idx list to the label for -1
     idxlist = [-1 for x in range(len(inup))]
-    punused = [x for x in range(len(inup))]
+#    punused = [x for x in range(len(inup))]
+    cdef int idxcounter 
+    cdef float tdist, max_z,un_x, un_y, un_z,tm_x, tm_y, tm_z, sqdist_test
+
     tdist = dist*dist
     idxcounter = 0
 
     # Sort the unused list 
-    punused_z = [inup[i][2] for i in punused]
-    sort_idx = sorted(range(len(punused_z)), key=lambda k: punused_z[k])
-    unused = [punused[idx] for idx in sort_idx]
+    punused_z =  inup[:,2]
+    #punused_z = [inup[i][2] for i in punused]
+    #sort_idx = sorted(range(len(punused_z)), key=lambda k: punused_z[k])
+    #unused = [punused[idx] for idx in sort_idx]
+    unused = sorted(range(len(punused_z)), key=lambda k: punused_z[k])
 
     for i in unused:
         # i is the first point
         if idxlist[i] != -1:
             continue
         tmpclust = []# make none
+	#append_tmpclust = tmpclust.append
+        #append_tmpclust(i)
         tmpclust.append(i)
+	
         max_z = inup[i][2]
-    #print ' start of the i loop-------'
         for j in unused:
             if idxlist[j] !=-1:
                 continue
-            if idxlist[j] == -1:
+            else:
                 if inup[j][2] - max_z >dist:
-                #           print 'we are breaking out early'
                     break
+
+            un_x =  inup[j][0]
+            un_y =  inup[j][1]
+            un_z =  inup[j][2]
             for te in tmpclust:
-                sqdist_test = (inup[j][0]-inup[te][0])*(inup[j][0]-inup[te][0])+(inup[j][1]-inup[te][1])*(inup[j][1]-inup[te][1])+(inup[j][2]-inup[te][2])*(inup[j][2]-inup[te][2])
-                #sqdist_test = pow(inup[j][0]-inup[te][0],2)+pow(inup[j][1]-inup[te][1],2)+pow(inup[j][2]-inup[te][2],2)
+                tm_x = inup[te][0]
+                tm_y = inup[te][1]
+                tm_z = inup[te][2]
+                #sqdist_test = (un_x-tm_x)*(un_x-tm_x)+(un_y-tm_y)*(un_y-tm_y)+(un_z-tm_z)*(un_z-tm_z)
+                sqdist_test = square_dist(un_x,un_y,un_z,tm_x,tm_y,tm_z)
+                #sqdist_test = (inup[j][0]-inup[te][0])*(inup[j][0]-inup[te][0])+(inup[j][1]-inup[te][1])*(inup[j][1]-inup[te][1])+(inup[j][2]-inup[te][2])*(inup[j][2]-inup[te][2])
                 if sqdist_test<tdist:
                     # add j to tmpclust
                     tmpclust.append(j)
-                    if max_z<inup[j][2]:
-                        max_z = inup[j][2]
+        	    #append_tmpclust(j)
+                    if max_z<un_z:
+                        max_z = un_z
                     break
     # log the idxlist
         if len(tmpclust)>mincluster:
@@ -50,57 +70,6 @@ def walker(inup, dist, mincluster):
             idxcounter +=1
     return idxlist
 #====================================================================================================================================
-
-############################################
-######### Walker Cluster ###################
-############################################
-def walker_old(inup, dist, mincluster):
-    idxlist = [-1 for x in range(len(inup))]
-    punused = [x for x in range(len(inup))]
-    tdist = dist*dist
-    idxcounter = 0
-
-    # Sort the unused list 
-    punused_z = [inup[i][2] for i in punused]
-    sort_idx = sorted(range(len(punused_z)), key=lambda k: punused_z[k])
-    unused = [punused[idx] for idx in sort_idx]
-
-    for i in unused:
-        # i is the first point
-        if idxlist[i] != -1:
-            continue
-        tmpclust = []# make none
-        tmpclust.append(i)
-        max_z = inup[i][2]
-    #print ' start of the i loop-------'
-        for j in unused:
-            if idxlist[j] !=-1:
-                continue
-            if idxlist[j] == -1:
-                if inup[j][2] - max_z >dist:
-                #           print 'we are breaking out early'
-                    break
-            for te in tmpclust:
-                sqdist_test = pow(inup[j][0]-inup[te][0],2)+pow(inup[j][1]-inup[te][1],2)+pow(inup[j][2]-inup[te][2],2)
-                if sqdist_test<tdist:
-                    # add j to tmpclust
-                    tmpclust.append(j)
-                    if max_z<inup[j][2]:
-                        max_z = inup[j][2]
-                    break
-        #print len(tmpclust)
-    # log the idxlist
-        if len(tmpclust)>mincluster:
-            for lab in tmpclust:
-                idxlist[lab] = idxcounter
-            idxcounter +=1
-    return idxlist
-
-#====================================================================================================================================
-#====================================================================================================================================
-
-
-    
 
 ############################################
 ######### crawler Clustering ###############
@@ -109,7 +78,7 @@ def crawler(inup, dist, mincluster ):
     indexlist = [-1 for x in range(len(inup))]
     unusedlist = [x for x in range(len(inup))]
     clusterlabel = 0
-    mindist = pow(dist,2) # This will save us from computing a square root on 
+    mindist = dist*dist 
     for pt in range(len(inup)):
         #see if this point is already used
         if not pt in unusedlist:
@@ -118,6 +87,7 @@ def crawler(inup, dist, mincluster ):
         tmpmerge = []
         tmpmerge.append(pt)
         #Push back on a temp list... next version#### RG
+
         mergedpts = False# This is here now.. we can remove this later
 
         # remove pt from unused list 
@@ -170,21 +140,16 @@ def crawler(inup, dist, mincluster ):
 #====================================================================================================================================
 #====================================================================================================================================
 
-
-
-
-
 ############################################
 ######### crawler nn     ###############
 ############################################
 def crawlernn(inup, dist, min_cls ):
-
     #######
     #### some stuff at the start that won't change
     #######
     clusterlabel = 0
     indexlist = [-1 for x in range(len(inup))]
-    distsq_max = pow(dist,2)
+    distsq_max = dist*dist
     def nn(pta,ptb):
         distsq = pow(pta[1]-ptb[1],2) + pow(pta[2]-ptb[2],2) + pow(pta[3]-ptb[3],2)
         if distsq < distsq_max:
@@ -194,60 +159,77 @@ def crawlernn(inup, dist, min_cls ):
     #######
 
     # Happens once
+    '''
     unusedlist = [(x,inup[x][0],inup[x][1],inup[x][2]) for x in range(len(inup))]
     ## First sort the list based on z position since is it has the most spread
     unusedlist.sort(key=itemgetter(3))
+    '''
+
+    punused = [x for x in range(len(inup))]
+    punused_z = [inup[i][2] for i in punused]
+    sort_idx = sorted(range(len(punused_z)), key=lambda k: punused_z[k])
+    iunused = [punused[idx] for idx in sort_idx]
+    unusedlist = [(x,inup[x][0],inup[x][1],inup[x][2]) for x in iunused]
+    
     
     while len(unusedlist)>min_cls:
 	#Find the minium and max  batch for z
-	minbatch_z = unusedlist[0][3]
+        minbatch_z = unusedlist[0][3]
 	#This makes the batch list for unused to work with. 
-	unused_batchlist = [x for x in unusedlist if x[3]<minbatch_z+dist]
+        unused_batchlist = [x for x in unusedlist if x[3]<minbatch_z+dist]
 	# Since it's sorted we can Use the last point as the farthest away point. 
-	maxbatch_z = unused_batchlist[-1][3]
+        maxbatch_z = unused_batchlist[-1][3]
 
 	### Now make the added points list
-	unused = unused_batchlist
+        unused = unused_batchlist
 	#Start a cluster
-	temp_cluster = [unused[0]]
+        temp_cluster = [unused[0]]
 	#Start wit this added  point
-	added_points =  [temp_cluster[0]]
+        added_points =  [temp_cluster[0]]
 	# remove it from the unused list since we will be uing it in the cluster
-	unused.pop(0)
+        unused.pop(0)
 
-	temp_maxbatch_z = maxbatch_z
+        temp_maxbatch_z = maxbatch_z
         while len(added_points)!=0:
-	    tmp_added = []
-	    for a in added_points:
+            tmp_added = []
+            for a in added_points:
 	        #### Get some stuff for NN
-	        tmp_unused = []
-	        for u in unused:
-		    if nn(a,u):
-		        tmp_added.append(u)
-		        temp_cluster.append(u)
-		    if not nn(a,u):
-		        tmp_unused.append(u)
-	        unused = tmp_unused
+                tmp_unused = []
+                # Changed  RG
+                append_tmp_unused = tmp_unused.append
+                append_tmp_added = tmp_added.append
+                append_temp_cluster = temp_cluster.append
+                for u in unused:
+                    if nn(a,u):
+                        append_tmp_added(u)
+		        #tmp_added.append(u)
+                        append_temp_cluster(u)
+		        #temp_cluster.append(u)
+                    if not nn(a,u):
+		        # Changed  RG
+                        append_tmp_unused(u)
+		        #tmp_unused.append(u)
+                unused = tmp_unused
 	        # Readjust the unused by adding extra points 
 	        # Add points that are distance max z of temp cluster +dist
 	        # this is going to be a time succk... but we need it for hookes with tracks on boundaries 
 
-	    tunused = [x for x in unusedlist if  x[3] < max(temp_cluster,key=itemgetter(3))[3]+dist]
+            tunused = [x for x in unusedlist if  x[3] < max(temp_cluster,key=itemgetter(3))[3]+dist]
 	    # Now remove the entries from front bactch that are already in the temp cluster
-	    unused = [x for x in tunused if x not in temp_cluster]
-	    added_points = tmp_added
+            unused = [x for x in tunused if x not in temp_cluster]
+            added_points = tmp_added
 
         # When getting out of the While we should have we have to clean up
         if len(temp_cluster) >= min_cls:
-	    for idx in temp_cluster:
+            for idx in temp_cluster:
 	        # Looping over the temp cluster and filling out the cluster label for the at the index in the index list
-	        indexlist[idx[0]] = clusterlabel
-	    # KEep it and remove these points from the unused list
-	    clusterlabel+=1
-	    unusedlist = [x for x in unusedlist if x not in temp_cluster]
+                indexlist[idx[0]] = clusterlabel
+	    # KEep it and remove these points from the unused lis
+            clusterlabel+=1
+            unusedlist = [x for x in unusedlist if x not in temp_cluster]
 	
         if len(temp_cluster) < min_cls:
-	    unusedlist = [x for x in unusedlist if x not in temp_cluster]
+            unusedlist = [x for x in unusedlist if x not in temp_cluster]
 	# Still remove points from the unused
 	# because this means we tried them
     ### The unused list should still remain sorted... so we can just pick up with the next batch step	
