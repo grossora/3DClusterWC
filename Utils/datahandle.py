@@ -147,7 +147,6 @@ def MakeJsonReco(f,jpath,jcount,reco_label,mc_dl):
 	
 
 #################################################################################################################
-'''
 def MakeJson(dataset,labels,jpath,jcount,reco_label,mc_dl):
     mlabels = mc_dl[1]
     data = [[0 for x in range(5)] for y in range(len(mlabels)+len(labels))]
@@ -191,7 +190,6 @@ def MakeJson(dataset,labels,jpath,jcount,reco_label,mc_dl):
     lookup.writelines(l)
     lookup.close()
     return
-'''
 
 def MakeJson_Objects(dataset,datasetidx_holder,labels,jpath,jcount,reco_label,mc_dl):
     mlabels = mc_dl[1]
